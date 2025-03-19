@@ -43,6 +43,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  int _calculateAge(String dob) {
+    DateTime birthDate = DateFormat('yyyy-MM-dd').parse(dob);
+    DateTime today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
   void _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -67,7 +78,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final user = userCredential;
 
       if (user != null) {
-        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
+        int age = _calculateAge(_dobController.text.trim());
+
+        Map<String, dynamic> userData = {
           "uid": user.uid,
           "name": _nameController.text.trim(),
           "email": _emailController.text.trim(),
@@ -76,8 +89,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
           "address": _addressController.text.trim(),
           "aadhar": _aadharController.text.trim(),
           "role": _selectedRole,
+          "age": age,
           "createdAt": FieldValue.serverTimestamp(),
-        });
+        };
+
+        if (_selectedRole == "Homebound") {
+          await FirebaseFirestore.instance
+              .collection("homebound")
+              .doc(user.uid)
+              .set(userData);
+        } else if (_selectedRole == "Volunteer") {
+          await FirebaseFirestore.instance
+              .collection("volunteers")
+              .doc(user.uid)
+              .set(userData);
+        } else if (_selectedRole == "Guardian") {
+          await FirebaseFirestore.instance
+              .collection("guardians")
+              .doc(user.uid)
+              .set(userData);
+        } else if (_selectedRole == "Organization") {
+          await FirebaseFirestore.instance
+              .collection("organization")
+              .doc(user.uid)
+              .set(userData);
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Account created successfully!")),
