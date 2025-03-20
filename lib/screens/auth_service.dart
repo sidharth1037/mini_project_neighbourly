@@ -13,7 +13,7 @@ class AuthService {
           email: email, password: password);
       return cred.user;
     } catch (e) {
-      print('Wrong');
+      print('Error creating user: $e');
     }
     return null;
   }
@@ -23,9 +23,14 @@ class AuthService {
     try {
       final cred = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
+
+      // Update SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+
       return cred.user;
     } catch (e) {
-      print('Wrong');
+      print('Error logging in: $e');
     }
     return null;
   }
