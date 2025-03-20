@@ -204,14 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     child: TextButton(
                       onPressed: () async {
-                        showConfirmationDialog(
-                            context); // If function is in editprofile.dart
-                        //   // OR
-                        //   roles.showConfirmationDialog(
-                        //       context); // If function is in roles.dart
-
-                        //   await _auth.signout();
-                        //   _goToLogin(context);
+                        showConfirmationDialog(context);
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -297,13 +290,7 @@ void showConfirmationDialog(BuildContext context) {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () async {
-                    edit.showConfirmationDialog(
-                        context); // If function is in editprofile.dart
-                    // OR
-                    roles.showConfirmationDialog(
-                        context); // If function is in roles.dart
-
-                    await _ProfilePageState._auth.signout();
+                    await _ProfilePageState._auth.signOut(context);
                     _ProfilePageState._goToLogin(context);
                   },
                   style: TextButton.styleFrom(
