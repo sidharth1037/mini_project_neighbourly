@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mini_ui/navbar.dart';
 import 'package:mini_ui/screens/screen_login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -34,25 +36,45 @@ class _SplashScreenState extends State<SplashScreen>
       _animationController.forward();
     });
 
-    // Navigate to login screen with a smooth transition after fade-out
+    // Navigate to the appropriate screen with a smooth transition after fade-out
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        _navigateToLogin();
+        _navigateToNextScreen();
       }
     });
   }
 
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 500), // Smooth transition duration
-      pageBuilder: (context, animation, secondaryAnimation) => const LogInScreen(),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-      },
-    ));
+  Future<void> _navigateToNextScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    if (isLoggedIn) {
+      Navigator.of(context).pushReplacement(PageRouteBuilder(
+        transitionDuration:
+            const Duration(milliseconds: 500), // Smooth transition duration
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ));
+    } else {
+      Navigator.of(context).pushReplacement(PageRouteBuilder(
+        transitionDuration:
+            const Duration(milliseconds: 500), // Smooth transition duration
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const LogInScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ));
+    }
   }
 
   @override
