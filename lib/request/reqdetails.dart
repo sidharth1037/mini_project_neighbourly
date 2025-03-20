@@ -2,20 +2,12 @@ import 'package:flutter/material.dart';
 import '../styles/styles.dart';
 
 class ReqDetailsPage extends StatelessWidget {
-  const ReqDetailsPage({super.key});
+  final Map<String, dynamic> request;
+
+  const ReqDetailsPage({super.key, required this.request});
 
   @override
   Widget build(BuildContext context) {
-    // Request details stored as a JSON-like Map
-    final Map<String, dynamic> requestDetails = {
-      "title": "Grocery Pickup",
-      "description": "Buy groceries from the nearby store and deliver them.",
-      "created": "25.02.25, 10:15 AM",
-      "endTime": "25.02.25, 12:00 PM",
-      "amount": "500 ₹",
-      "status": "Accepted by a volunteer",
-    };
-
     return Scaffold(
       backgroundColor: Styles.darkPurple, // Set background color
       body: SingleChildScrollView(
@@ -26,7 +18,7 @@ class ReqDetailsPage extends StatelessWidget {
               height: MediaQuery.of(context).size.height * 0.33,
               child: Stack(
                 children: [
-                  Align(
+                  const Align(
                     alignment: Alignment.center,
                     child: Text("Request Details", style: Styles.titleStyle),
                   ),
@@ -49,41 +41,49 @@ class ReqDetailsPage extends StatelessWidget {
                 children: [
                   // Title and Description Container
                   buildInfoContainer(
-                    requestDetails["title"],
+                    request["requestType"],
                   ),
 
                   const SizedBox(height: 10),
 
                   buildInfoContainer(
                     'Description: ',
-                    value: requestDetails["description"],
+                    value: request["description"],
                   ),
 
                   const SizedBox(height: 10),
 
                   // Created Time
-                  buildInfoContainer("Request Created:", value: requestDetails["created"]),
+                  buildInfoContainer("Date:", value: request["date"]),
 
                   const SizedBox(height: 10),
 
                   // End Time
-                  buildInfoContainer("Request End Time:", value: requestDetails["endTime"]),
+                  buildInfoContainer("Time:", value: request["date"] != null
+                    ? (DateTime.tryParse(request["date"]) != null
+                    ? "${DateTime.parse(request["date"]).day.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).month.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).year}"
+                    : "Invalid Date")
+                    : "N/A"),
 
                   const SizedBox(height: 10),
+                  buildInfoContainer("Amount:", value: "${request["amount"]} ₹"),
 
-                  // Amount
-                  buildInfoContainer("Amount:", value: requestDetails["amount"]),
+                  const SizedBox(height: 10),
+                  buildInfoContainer("Volunteer Preference:", value: request["volunteerGender"]),
+
+                  const SizedBox(height: 10),
+                  buildInfoContainer("Send To:", value: request["requestAt"]),
 
                   const SizedBox(height: 10),
 
                   // Status Container
                   buildInfoContainer(
                     "Status: ",
-                    value: requestDetails["status"],
+                    value: request["status"],
                     isStatus: true, // Apply status-specific styling
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 26),
 
                   // Cancel Request Button
                   SizedBox(
@@ -100,12 +100,12 @@ class ReqDetailsPage extends StatelessWidget {
                           side: const BorderSide(color: Styles.offWhite, width: 2),
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.cancel, color: Colors.white, size: 26),
-                          const SizedBox(width: 8),
-                          const Text(
+                          Icon(Icons.cancel, color: Colors.white, size: 26),
+                          SizedBox(width: 8),
+                          Text(
                             "Cancel Request",
                             style: TextStyle(
                               color: Colors.white,
@@ -129,33 +129,36 @@ class ReqDetailsPage extends StatelessWidget {
   // Function to build info container dynamically
   Widget buildInfoContainer(String title, {String value = '', bool isStatus = false}) {
     Color statusColor = Colors.yellow[500]!;
+    String statusText = "";
 
-    if (value == 'Accepted by a volunteer') {
-      statusColor = const Color.fromARGB(255, 145, 255, 150);
-    } else if (value == 'Waiting for volunteer') {
+    if (value == 'Accepted') {
+      statusColor = const Color.fromARGB(255, 145, 255, 150); 
+      statusText = "Accepted by a volunteer";
+    } else if (value == 'Waiting') {
       statusColor = Colors.yellow[500]!;
+      statusText = "Waiting for volunteer";
     }
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(15, 15, 20, 15),
       decoration: BoxDecoration(
         color: Styles.mildPurple,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        value.isEmpty ? title : "$title $value",
+        isStatus ? "Status: $statusText" : (value.isEmpty ? title : "⦿ $title $value"),
         style: value.isEmpty
+        ? Styles.bodyStyle.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          )
+        : isStatus
             ? Styles.bodyStyle.copyWith(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              )
-            : isStatus
-                ? Styles.bodyStyle.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                  )
-                : Styles.bodyStyle,
+            color: statusColor,
+            fontWeight: FontWeight.bold,
+          )
+            : Styles.bodyStyle,
       ),
     );
   }

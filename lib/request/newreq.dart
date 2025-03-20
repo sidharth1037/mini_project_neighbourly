@@ -1,23 +1,224 @@
 import 'package:flutter/material.dart';
 import '../styles/styles.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 
 class NewRequestPage extends StatefulWidget {
   const NewRequestPage({super.key});
 
   @override
-  State<NewRequestPage> createState() => _NewRequestPageState();
+  NewRequestPageState createState() => NewRequestPageState();
 }
 
-class _NewRequestPageState extends State<NewRequestPage> {
+class NewRequestPageState extends State<NewRequestPage> {
   final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController amountController = TextEditingController();
   String selectedRequest = "Buy Groceries";
   String requestAt = "Neighbourhood";
   String selectedGender = "Male";
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  bool _isLoading = false;
+
+  Future<String> saveRequestToFirebase(
+    BuildContext context,
+    DateTime? selectedDate,
+    TimeOfDay? selectedTime,
+    TextEditingController descriptionController,
+    String selectedRequest, String selectedGender,
+    String requestAt,
+    TextEditingController amountController,
+    ) async {
+
+      setState(() => _isLoading = true);
+
+      if (selectedDate == null
+        || selectedTime == null
+        || descriptionController.text.isEmpty
+        || amountController.text.isEmpty) {
+        return "Please fill all fields before submitting.";
+      }
+
+      final requestData = {
+        "requestType": selectedRequest,
+        "description": descriptionController.text,
+        "date": "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}",
+        "time": selectedTime.format(context),
+        "volunteerGender": selectedGender,
+        "requestAt": requestAt,
+        "amount": double.tryParse(amountController.text)?.toStringAsFixed(2) ?? "0.00",
+        "status": "Waiting",
+        "timestamp": FieldValue.serverTimestamp(),
+      };
+
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        return "User not logged in.";
+      }
+      
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        return "No network connection. Try again later.";
+      }
+
+      try {
+        await FirebaseFirestore.instance
+            .collection('homebound')
+            .doc(user.uid)
+            .collection('current_requests')
+            .add(requestData);
+        return "success";
+      } catch (e) {
+        return "An error occurred. Try again later.";
+      }
+    }
+
+  showConfirmationDialog(
+    BuildContext context,
+    DateTime? selectedDate,
+    TimeOfDay? selectedTime,
+    TextEditingController descriptionController,
+    String selectedRequest, String selectedGender,
+    String requestAt,
+    TextEditingController amountController,
+    ) {
+    
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent user from dismissing the dialog
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+                return AlertDialog(
+                backgroundColor: Styles.mildPurple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: const Text(
+                  "Confirm Submission",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                content:  _isLoading
+                        ? const SizedBox(
+                          height: 80,
+                          width: 40,
+                          child: Center(
+                            child: Column(
+                              children: [
+                                SizedBox(height: 30,),
+                                CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      :const Text(
+                  "Are you sure you want to submit this request?",
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                actions:  _isLoading
+                      ? []
+                      : [
+                          Column(
+                          children: [
+                            SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                              backgroundColor: Styles.lightPurple,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text(
+                              "Cancel",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              ),
+                            ),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: () async {
+                                setState(() => _isLoading = true);
+                                String status = await saveRequestToFirebase(
+                                  context,
+                                  selectedDate,
+                                  selectedTime,
+                                  descriptionController,
+                                  selectedRequest,
+                                  selectedGender,
+                                  requestAt,
+                                  amountController,
+                                );
+
+                                if (status == "success" && context.mounted) {
+                                    Navigator.of(context).pop(); // Close the dialog
+                                }
+
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                      status == "success"
+                                        ? "Request successfully submitted."
+                                        : status,
+                                      style: const TextStyle(fontSize: 17),
+                                      ),
+                                      backgroundColor: status == "success" ? Colors.green[400] : Colors.red[400],
+                                      behavior: SnackBarBehavior.floating,
+                                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                      shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+                                    ),
+                                  );
+                                }
+                            },
+                              style: TextButton.styleFrom(
+                              backgroundColor: Colors.green[500],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text(
+                              "Submit Request",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              ),
+                            ),
+                            ),
+                          ],
+                          ),
+                ],
+                );
+            },
+          );
+        },
+      );
+    }
 
   // Function to pick a date
   Future<void> _pickDate(BuildContext context) async {
+    FocusScope.of(context).requestFocus(FocusNode());
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -33,6 +234,7 @@ class _NewRequestPageState extends State<NewRequestPage> {
 
   // Function to pick a time
   Future<void> pickTime(BuildContext context) async {
+    FocusScope.of(context).requestFocus(FocusNode());
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -55,7 +257,7 @@ class _NewRequestPageState extends State<NewRequestPage> {
               height: MediaQuery.of(context).size.height * 0.33,
               child: Stack(
                 children: [
-                  Align(
+                  const Align(
                     alignment: Alignment.center,
                     child: Text("New Request", style: Styles.titleStyle),
                   ),
@@ -90,12 +292,14 @@ class _NewRequestPageState extends State<NewRequestPage> {
                         color: Styles.lightPurple,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: DropdownButtonHideUnderline(
+                        child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: selectedRequest,
                           dropdownColor: Styles.lightPurple,
+                          borderRadius: BorderRadius.circular(10),
                           style: Styles.bodyStyle,
                           isExpanded: true,
+                          icon: const Icon(Icons.arrow_drop_down, color: Colors.white), // Changed arrow color to white
                           items: ["Buy Groceries", "Drive to a Place", "Gardening"]
                               .map((String value) {
                             return DropdownMenuItem<String>(
@@ -122,6 +326,7 @@ class _NewRequestPageState extends State<NewRequestPage> {
                       maxLines: null,
                       style: Styles.bodyStyle,
                       cursorColor: Colors.white,
+                      textInputAction: TextInputAction.done, // Show checkmark instead of newline
                       decoration: InputDecoration(
                       filled: true,
                       hintText: "Describe what you need...",
@@ -192,6 +397,7 @@ class _NewRequestPageState extends State<NewRequestPage> {
                         children: [
                         GestureDetector(
                           onTap: () {
+                            FocusScope.of(context).requestFocus(FocusNode());
                           setState(() {
                             selectedGender = "Male";
                           });
@@ -217,6 +423,7 @@ class _NewRequestPageState extends State<NewRequestPage> {
                         ),
                         GestureDetector(
                           onTap: () {
+                            FocusScope.of(context).requestFocus(FocusNode());
                           setState(() {
                             selectedGender = "Female";
                           });
@@ -253,26 +460,28 @@ class _NewRequestPageState extends State<NewRequestPage> {
                         color: Styles.lightPurple,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: DropdownButtonHideUnderline(
+                        child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: requestAt,
                           dropdownColor: Styles.lightPurple,
                           style: Styles.bodyStyle,
                           isExpanded: true,
-                          items: ["Neighbourhood", "Priority List", "Both Neighbourhood & Priority List"]
-                              .map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
+                          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                          items: ["Neighbourhood", "Priority List", "Neighbourhood & Priority List"]
+                            .map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
                           }).toList(),
                           onChanged: (String? newValue) {
-                            setState(() {
-                              requestAt = newValue!;
-                            });
+                          setState(() {
+                            requestAt = newValue!;
+                          });
                           },
+                          borderRadius: BorderRadius.circular(10), // Added rounded corners
                         ),
-                      ),
+                        ),
                     ),
 
                     const SizedBox(height: 15),
@@ -280,6 +489,7 @@ class _NewRequestPageState extends State<NewRequestPage> {
                     Text("Amount :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     TextField(
+                      controller: amountController,
                       keyboardType: TextInputType.number,
                       style: Styles.bodyStyle,
                       cursorColor: Colors.white,
@@ -307,110 +517,46 @@ class _NewRequestPageState extends State<NewRequestPage> {
                 height: 56,
                 child: TextButton(
                   onPressed: () {
-                    showConfirmationDialog(context);
+                  FocusScope.of(context).requestFocus(FocusNode()); // Remove focus from all text fields
+                  setState(() => _isLoading = false);
+                  showConfirmationDialog(
+                    context, selectedDate,
+                    selectedTime,
+                    descriptionController,
+                    selectedRequest,
+                    selectedGender,
+                    requestAt,
+                    amountController);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[500],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: const BorderSide(color: Styles.offWhite, width: 2),
-                    ),
+                  style: TextButton.styleFrom(
+                  backgroundColor: Colors.green[500],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: const BorderSide(color: Styles.offWhite, width: 2),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.check_circle, color: Colors.white, size: 26),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "Submit Request",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  ),
+                  child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white, size: 26),
+                    SizedBox(width: 8),
+                    Text(
+                    "Submit Request",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    ),
+                  ],
                   ),
                 ),
               ),
             ),
+            const SizedBox(height: 4,)
           ],
         ),
       ),
     );
   }
-}
-
-// Confirmation Dialog Function
-void showConfirmationDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Styles.mildPurple,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          "Confirm Submission",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        content: const Text(
-          "Are you sure you want to submit this request?",
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
-        actions: [
-          Column(
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Styles.lightPurple,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.green[500],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text(
-                    "Submit Request",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    },
-  );
 }
