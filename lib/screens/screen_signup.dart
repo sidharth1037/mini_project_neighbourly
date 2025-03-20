@@ -171,7 +171,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             Container(
               padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2), // Light Purple Background
+                color: Styles.mildPurple, // Light Purple Background
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -247,7 +247,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             TextButton(
                               onPressed: _goToLogin,
                               child: const Text(
-                                "Sign in",
+                                "Log In",
                                 style:
                                     TextStyle(color: Colors.blue, fontSize: 16),
                               ),

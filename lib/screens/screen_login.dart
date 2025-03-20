@@ -96,15 +96,16 @@ class _LoginScreenState extends State<LogInScreen> {
                 ),
                 const SizedBox(height: 20),
                 Container(
+                  
                   margin: const EdgeInsets.all(10.0),
                   padding: const EdgeInsets.all(16.0),
                   width: MediaQuery.of(context).size.width * 0.9,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
-                    color: Colors.white.withOpacity(0.2),
+                    color: Styles.mildPurple, 
                     boxShadow: const [
                       BoxShadow(
-                        color: Colors.black26,
+                        color: Color.fromARGB(66, 0, 0, 0),
                         blurRadius: 10,
                         spreadRadius: 2,
                       ),
@@ -199,7 +200,7 @@ class _LoginScreenState extends State<LogInScreen> {
                                 child: const Padding(
                                   padding: EdgeInsets.symmetric(
                                       vertical: 12.0, horizontal: 24.0),
-                                  child: Text('Sign In'),
+                                  child: Text('Log In'),
                                 ),
                               ),
                         const SizedBox(height: 10),

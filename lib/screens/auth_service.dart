@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mini_ui/screens/screen_login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 
 class AuthService {
-  final _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<User?> createUserWithEmailAndPassword(
       String email, String password) async {
@@ -27,11 +30,17 @@ class AuthService {
     return null;
   }
 
-  Future<void> signout() async {
-    try {
-      _auth.signOut();
-    } catch (e) {
-      print('Something Went Wrong');
-    }
+  Future<void> signOut(BuildContext context) async {
+    await _auth.signOut();
+
+    // Update SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+
+    // Navigate to login screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LogInScreen()),
+    );
   }
 }
