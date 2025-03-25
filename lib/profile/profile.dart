@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mini_ui/screens/auth_service.dart';
 import 'package:mini_ui/screens/screen_login.dart';
 import 'editprofile.dart' as edit;
 import '../styles/styles.dart';
-import 'roles.dart' as roles;
+// import 'roles.dart' as roles;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class ProfilePageState extends State<ProfilePage> {
   static final _auth = AuthService();
-  static final User? _user = FirebaseAuth.instance.currentUser;
   String _userName = "Loading..."; // Default until data loads
 
   @override
@@ -26,18 +24,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchUserData() async {
-    if (_user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(_user!.uid)
-          .get();
-
-      if (userDoc.exists) {
-        setState(() {
-          _userName = userDoc["name"] ?? "User"; // Fallback if name is null
-        });
-      }
-    }
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('userName') ?? "User"; // Fallback if not found
+    });
   }
 
   static void _goToLogin(BuildContext context) {
@@ -90,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 shape: BoxShape.circle,
                                 color: Styles.white,
                               ),
-                              child: Icon(Icons.person,
+                              child: const Icon(Icons.person,
                                   size: 40, color: Colors.grey),
                             ),
                             const SizedBox(width: 16),
@@ -110,8 +100,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                       const edit.EditProfilePage()),
                             );
                           },
-                          child: Row(
-                            children: const [
+                          child: const Row(
+                            children: [
                               Text("Edit", style: Styles.buttonTextStyle),
                               SizedBox(width: 4),
                               Icon(Icons.arrow_forward_ios,
@@ -123,48 +113,48 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  // const SizedBox(height: 20),
 
                   // Role Section Box (Unchanged)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: Styles.boxDecoration
-                        .copyWith(color: Styles.lightPurple),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const Text("Role : ",
-                            style: TextStyle(
-                                color: Styles.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        roles.ChangeRolePage()),
-                              );
-                            },
-                            style: Styles.settingsButtonStyle,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text("Volunteer",
-                                    style: Styles.buttonTextStyle),
-                                const Icon(Icons.arrow_forward_ios,
-                                    size: 16, color: Styles.white),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Container(
+                  //   width: double.infinity,
+                  //   padding: const EdgeInsets.all(16),
+                  //   decoration: Styles.boxDecoration
+                  //       .copyWith(color: Styles.lightPurple),
+                  //   child: Row(
+                  //     mainAxisAlignment: MainAxisAlignment.start,
+                  //     children: [
+                  //       const Text("Role : ",
+                  //           style: TextStyle(
+                  //               color: Styles.white,
+                  //               fontSize: 20,
+                  //               fontWeight: FontWeight.bold)),
+                  //       const SizedBox(width: 4),
+                  //       Expanded(
+                  //         child: TextButton(
+                  //           onPressed: () {
+                  //             Navigator.push(
+                  //               context,
+                  //               MaterialPageRoute(
+                  //                   builder: (context) =>
+                  //                       const roles.ChangeRolePage()),
+                  //             );
+                  //           },
+                  //           style: Styles.settingsButtonStyle,
+                  //           child: const Row(
+                  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //             children: [
+                  //               Text("Volunteer",
+                  //                   style: Styles.buttonTextStyle),
+                  //               Icon(Icons.arrow_forward_ios,
+                  //                   size: 16, color: Styles.white),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
 
                   const SizedBox(height: 20),
 
@@ -200,7 +190,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                     decoration: Styles.boxDecoration.copyWith(
                       color: Styles.lightPurple,
-                      border: Border.all(color: Colors.white70, width: 2),
                     ),
                     child: TextButton(
                       onPressed: () async {
@@ -290,8 +279,8 @@ void showConfirmationDialog(BuildContext context) {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () async {
-                    await _ProfilePageState._auth.signOut(context);
-                    _ProfilePageState._goToLogin(context);
+                    await ProfilePageState._auth.signOut(context);
+                    ProfilePageState._goToLogin(context);
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.red[400],

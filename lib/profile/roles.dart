@@ -17,7 +17,7 @@ class ChangeRolePage extends StatelessWidget {
               child: Stack(
                 children: [
                   // Title (Centered)
-                  Align(
+                  const Align(
                     alignment: Alignment.center,
                     child: Text("Change Role", style: Styles.titleStyle),
                   ),
@@ -36,7 +36,7 @@ class ChangeRolePage extends StatelessWidget {
             ),
 
             // Cards Section (Bottom Two-Thirds)
-            ChangeRoleCardSection()
+            const ChangeRoleCardSection()
           ],
         ),
       ),
@@ -71,7 +71,7 @@ class ChangeRoleCardSectionState extends State<ChangeRoleCardSection> {
               });
             },
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           RoleCard(
             role: 'Volunteer',
             description: 'Can edit content but has limited access to settings.',
@@ -83,7 +83,7 @@ class ChangeRoleCardSectionState extends State<ChangeRoleCardSection> {
               });
             },
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           RoleCard(
             role: 'Guardian',
             description: 'Can view content but cannot make changes.',
@@ -120,14 +120,14 @@ class ChangeRoleCardSectionState extends State<ChangeRoleCardSection> {
                 // Handle change role action
               },
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
                   side: BorderSide( color: Color.fromARGB(255, 241, 241, 241), width: 2.0)
                   
                 ),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.swap_horiz, color: Styles.white, size: 26,),
@@ -175,7 +175,7 @@ class RoleCard extends StatelessWidget {
         child: Card(
           shape: isSelected
               ? RoundedRectangleBorder(
-                  side: BorderSide(color: const Color.fromARGB(255, 241, 241, 241), width: 3.0),
+                  side: const BorderSide(color: const Color.fromARGB(255, 241, 241, 241), width: 3.0),
                   borderRadius: BorderRadius.circular(20.0),
                 )
               : RoundedRectangleBorder(
@@ -185,8 +185,8 @@ class RoleCard extends StatelessWidget {
           child: Center(
             child: ListTile(
               leading: Icon(icon, color: Styles.white),
-              title: Text(role, style: TextStyle(color: Styles.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              trailing: isSelected ? Icon(Icons.check, color: Styles.white,) : null,
+              title: Text(role, style: const TextStyle(color: Styles.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              trailing: isSelected ? const Icon(Icons.check, color: Styles.white,) : null,
             ),
           ),
         ),

@@ -8,14 +8,25 @@ import 'menu/reqhistory/reqhistory.dart';
 import 'menu/neighbourhood/neighbourhood.dart';
 import 'menu/customer/support.dart';
 import 'menu/wallet/wallet.dart';
-import 'menu/priority/prioritylist.dart'; // Ensure this contains your colors
+import 'menu/priority/prioritylist.dart';
+import 'organization/volunteerlist.dart'; // Ensure this contains your colors
+import 'package:shared_preferences/shared_preferences.dart';
 
-List<Map<String, dynamic>> contents=[
-        {"icon":Icons.history,"label":"Request\nHistory","Navigation": ReqHistoryPage()},
+List<Map<String, dynamic>> contentsHomebound=[
+        {"icon":Icons.history,"label":"Request\nHistory","Navigation": const ReqHistoryPage()},
         {"icon":Icons.location_city,"label":"Neighbourhood","Navigation":Neighbourhood()},
-        {"icon":Icons.priority_high,"label":"Volunteer\nPriority List","Navigation":PriorityPage()},
-        {"icon":Icons.checklist,"label":"To-Do List","Navigation":Placeholder()},
-        {"icon":Icons.support_agent,"label":"Customer\nCare","Navigation":CustomerSupport()},
+        {"icon":Icons.priority_high,"label":"Volunteer\nPriority List","Navigation": const PriorityPage()},
+        {"icon":Icons.checklist,"label":"To-Do List","Navigation": const Placeholder()},
+        {"icon":Icons.support_agent,"label":"Customer\nCare","Navigation": const CustomerSupport()},
+        {"icon":Icons.wallet,"label":"Wallet","Navigation":Wallet()}
+  ];
+
+List<Map<String, dynamic>> contentsVolunteer=[
+        {"icon":Icons.history,"label":"Request\nHistory","Navigation": const ReqHistoryPage()},
+        {"icon":Icons.location_city,"label":"Neighbourhood","Navigation":Neighbourhood()},
+        {"icon":Icons.priority_high,"label":"Volunteer\nPriority List","Navigation": const PriorityPage()},
+        {"icon":Icons.group,"label":"Organization","Navigation": const Placeholder()},
+        {"icon":Icons.support_agent,"label":"Customer\nCare","Navigation": const CustomerSupport()},
         {"icon":Icons.wallet,"label":"Wallet","Navigation":Wallet()}
   ];
 
@@ -28,13 +39,74 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   int selectedIndex = 0; // Default to Home
+  List<Widget> pages = [const Center(child: CircularProgressIndicator())]; // Default page to avoid empty list
+  List<BottomNavigationBarItem> navItems = [
+    const BottomNavigationBarItem(icon: Icon(Icons.error), label: 'Loading'), // Default nav item
+    const BottomNavigationBarItem(icon: Icon(Icons.error), label: 'Loading') // Second default nav item
+  ]; // Default navigation items to avoid empty list
 
-  // Pages
-  final List<Widget> pages = [
-    RequestsPage(), // Requests Page (Replace with actual page later)
-    Home(content: contents,title: "Menu",backbutton: false,), // Home Page (Replace with actual page later)
-    ProfilePage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _initializeNavBar();
+  }
+
+  Future<void> _initializeNavBar() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType') ?? 'homebound';
+
+    if (userType == 'organization') {
+      // Set pages and nav items for organizations
+      pages = [
+        const VolunteerListPage(), // Replace with Volunteers Page
+        const RequestsPage(),
+        const ProfilePage(),
+      ];
+      navItems = const [
+        BottomNavigationBarItem(icon: Icon(Icons.volunteer_activism), label: 'Volunteers'),
+        BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ];
+    } else if (userType == 'homebound') {
+      // Set pages and nav items for homebound
+      pages = [
+        const RequestsPage(),
+        Home(content: contentsHomebound, title: "Menu", backbutton: false),
+        const ProfilePage(),
+      ];
+      navItems = const [
+        BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Menu'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ];
+    } else if (userType == 'volunteers') {
+      // Set pages and nav items for homebound
+      pages = [
+        const RequestsPage(),
+        Home(content: contentsVolunteer, title: "Menu", backbutton: false),
+        const ProfilePage(),
+      ];
+      navItems = const [
+        BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Menu'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ];
+    } else if (userType == 'guardians') {
+      // Set pages and nav items for homebound
+      pages = [
+        const RequestsPage(),
+        Home(content: contentsHomebound, title: "Menu", backbutton: false),
+        const ProfilePage(),
+      ];
+      navItems = const [
+        BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Menu'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ];
+    }
+
+    setState(() {}); // Update the UI after setting pages and nav items
+  }
 
   void onItemTapped(int index) {
     setState(() {
@@ -52,7 +124,7 @@ class MainScreenState extends State<MainScreen> {
         }
       },
       child: Scaffold(
-        body: pages[selectedIndex], // Display selected page
+        body: pages.isNotEmpty ? pages[selectedIndex] : const Center(child: CircularProgressIndicator()), // Display selected page or loading indicator
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: selectedIndex,
           onTap: onItemTapped,
@@ -60,11 +132,7 @@ class MainScreenState extends State<MainScreen> {
           selectedItemColor: Colors.white, // Highlight selected item
           unselectedItemColor: Colors.grey.shade400, // Dim unselected items
           type: BottomNavigationBarType.fixed, // Ensures all labels are shown
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Menu'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
+          items: navItems, // Dynamically set navigation items
         ),
       ),
     );

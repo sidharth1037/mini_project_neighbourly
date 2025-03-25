@@ -10,10 +10,10 @@ class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  SignUpScreenState createState() => SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class SignUpScreenState extends State<SignUpScreen> {
   final _auth = AuthService();
   final _formKey = GlobalKey<FormState>();
 
@@ -28,7 +28,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String? _selectedGender;
   String? _selectedRole; // Default role
-  bool _isPasswordVisible = false;
+  bool isPasswordVisible = false;
   bool _isLoading = false;
 
   @override
@@ -54,20 +54,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return age;
   }
 
-  void _signUp() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<String> _signUp() async {
+    if (!_formKey.currentState!.validate()) return "Form validation failed";
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
+      // Check if the email already exists in any of the collections
+      final collections = ["homebounds", "volunteers", "guardians", "organizations"];
+      for (String collection in collections) {
+        final querySnapshot = await FirebaseFirestore.instance
+        .collection(collection)
+        .where('email', isEqualTo: _emailController.text.trim())
+        .limit(1)
+        .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          setState(() {
+        _isLoading = false;
+          });
+          return "An account with this email already exists in $collection";
+        }
+      }
+
+      if (_passwordController.text.length < 6) {
+        setState(() {
+          _isLoading = false;
+        });
+        return "Password must be at least 6 characters long";
+      }
       if (_passwordController.text != _confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Passwords do not match"),
-          ),
-        );
-        setState(() => _isLoading = false);
-        return;
+        setState(() {
+          _isLoading = false;
+        });
+        return "Passwords do not match";
       }
 
       final userCredential = await _auth.createUserWithEmailAndPassword(
@@ -115,19 +137,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
               .set(userData);
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Account created successfully!")),
-        );
-
-        _goToLogin();
+        _isLoading = false;
+        return "Account created successfully! Please Log In.";
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
-      );
+      _isLoading = false;
+      return "Error: ${e.toString()}";
     }
 
-    setState(() => _isLoading = false);
+    setState(() {
+      _isLoading = false;
+    });
+    return "Unknown error occurred";
   }
 
   void _goToLogin() {
@@ -231,7 +252,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ? const CircularProgressIndicator(
                                 color: Styles.white)
                             : ElevatedButton(
-                                onPressed: _signUp,
+                                onPressed: () async {
+                                  String result = await _signUp();
+                                  if (mounted) {
+                                    setState(() {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(result)),
+                                      );
+
+                                      if( result == "Account created successfully! Please Log In.") {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const LogInScreen(),
+                                          ),
+                                        );
+                                      }
+                                    });
+                                  }
+                                },
                                 child: const Padding(
                                   padding: EdgeInsets.symmetric(
                                       vertical: 12.0, horizontal: 24.0),
@@ -300,7 +339,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return _buildTextField(
       controller: _passwordController,
       label: 'Password',
-      obscureText: !_isPasswordVisible,
+      obscureText: !isPasswordVisible,
       icon: Icons.lock,
     );
   }

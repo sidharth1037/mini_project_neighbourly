@@ -27,20 +27,24 @@ class RequestsPageState extends State<RequestsPage> {
   Future<void> fetchAllRequests() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      setState(() {
-        errorMessage = "User not logged in";
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          errorMessage = "User not logged in";
+          isLoading = false;
+        });
+      }
       return;
     }
 
     // Check for internet connection
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      setState(() {
-        errorMessage = "No network connection. Try again later.";
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          errorMessage = "No network connection. Try again later.";
+          isLoading = false;
+        });
+      }
       return;
     }
 
@@ -52,19 +56,23 @@ class RequestsPageState extends State<RequestsPage> {
           .orderBy('timestamp', descending: true)
           .get();
 
-      setState(() {
-        requests = querySnapshot.docs
-            .map((doc) => doc.data() as Map<String, dynamic>)
-            .toList();
-        isLoading = false;
-        errorMessage = requests.isEmpty ? "No current requests." : "success"; // Show message if no requests
-      });
+      if (mounted) {
+        setState(() {
+          requests = querySnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+          isLoading = false;
+          errorMessage = requests.isEmpty ? "No current requests." : "success"; // Show message if no requests
+        });
+      }
     } catch (e) {
       debugPrint("Error while fetching data: $e");
-      setState(() {
-        errorMessage = "An error occurred. Try again later.";
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          errorMessage = "An error occurred. Try again later.";
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -143,9 +151,11 @@ class RequestsPageState extends State<RequestsPage> {
                       context,
                       MaterialPageRoute(builder: (context) => const NewRequestPage()),
                     ).then((_) {
-                      setState(() {
-                      isLoading = true;
-                      });
+                      if (mounted) {
+                        setState(() {
+                        isLoading = true;
+                        });
+                      }
                       // Reload the data when returning to this page
                       fetchAllRequests();
                     });
