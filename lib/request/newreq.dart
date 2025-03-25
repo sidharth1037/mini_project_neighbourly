@@ -42,12 +42,15 @@ class NewRequestPageState extends State<NewRequestPage> {
       }
 
       final requestData = {
+        "homeboundId": FirebaseAuth.instance.currentUser!.uid,
+        "volunteerId": "",
         "requestType": selectedRequest,
         "description": descriptionController.text,
         "date": "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}",
         "time": selectedTime.format(context),
         "volunteerGender": selectedGender,
         "requestAt": requestAt,
+        "neighbourhood": "None",
         "amount": double.tryParse(amountController.text)?.toStringAsFixed(2) ?? "0.00",
         "status": "Waiting",
         "timestamp": FieldValue.serverTimestamp(),
@@ -66,10 +69,8 @@ class NewRequestPageState extends State<NewRequestPage> {
 
       try {
         await FirebaseFirestore.instance
-            .collection('homebound')
-            .doc(user.uid)
-            .collection('current_requests')
-            .add(requestData);
+        .collection('current_requests')
+        .add(requestData);
         return "success";
       } catch (e) {
         return "An error occurred. Try again later.";

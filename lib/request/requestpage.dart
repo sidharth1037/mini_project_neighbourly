@@ -49,18 +49,37 @@ class RequestsPageState extends State<RequestsPage> {
     }
 
     try {
+      // QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+      //     .collection('homebound')
+      //     .doc(user.uid)
+      //     .collection('current_requests')
+      //     .orderBy('timestamp', descending: true)
+      //     .get();
+      //     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+      //         .collection('homebound')
+      //         .doc(user.uid)
+      //         .collection('current_requests')
+      //         .where('homeboundId', isEqualTo: user.uid)
+      //         .orderBy('timestamp', descending: true)
+      //         .get();
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('homebound')
-          .doc(user.uid)
           .collection('current_requests')
-          .orderBy('timestamp', descending: true)
+          .where('homeboundId', isEqualTo: user.uid)
           .get();
 
       if (mounted) {
         setState(() {
           requests = querySnapshot.docs
-              .map((doc) => doc.data() as Map<String, dynamic>)
-              .toList();
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+
+          // Sort the requests by timestamp in descending order
+          requests.sort((a, b) {
+        final timestampA = a['timestamp'] ?? 0;
+        final timestampB = b['timestamp'] ?? 0;
+        return timestampB.compareTo(timestampA);
+          });
+
           isLoading = false;
           errorMessage = requests.isEmpty ? "No current requests." : "success"; // Show message if no requests
         });
