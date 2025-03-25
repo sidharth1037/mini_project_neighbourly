@@ -1,9 +1,37 @@
 import '../../styles/custom_style.dart';
 import 'package:flutter/material.dart';
 import '../../styles/styles.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateNeighbourhood extends StatelessWidget with CustomStyle {
   CreateNeighbourhood({super.key});
+    Future<void> addNhood() async{
+    String name= nameController.text.trim();
+    String address = addressController.text.trim();
+    String city = cityController.text.trim();
+    String state = stateController.text.trim();
+    String zip =zipController.text.trim();
+    String description=descriptionController.text.trim();
+
+    if(name.isNotEmpty && address.isNotEmpty && city.isNotEmpty
+    && state.isNotEmpty && zip.isNotEmpty && description.isNotEmpty)
+      {try
+        {
+          await FirebaseFirestore.instance.collection('neighbourhood').add({
+            'name':name,
+            'address':address,
+            'city':city,
+            'state':state,
+            'zip':zip,
+            'description':description,
+            'timestamp':FieldValue.serverTimestamp(),
+          });
+          print("neighbourhood created");}
+          catch(e){print("error: $e");}
+        }
+      
+      }
+  
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
@@ -128,13 +156,13 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
       ),
     );
   }
-}
+
 
 // Confirmation Dialog Function
 void showConfirmationDialog(BuildContext context) {
   showDialog(
     context: context,
-    builder: (BuildContext context) {
+    builder: (BuildContext context1) {
       return AlertDialog(
         backgroundColor: Styles.mildPurple,
         shape: RoundedRectangleBorder(
@@ -177,7 +205,14 @@ void showConfirmationDialog(BuildContext context) {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () {
+                    addNhood();    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Neighbourhood added successfully!")),
+                          );
+           
+                    Navigator.pop(context1);
                     Navigator.pop(context);
+                   
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: Styles.lightPurple,
@@ -202,4 +237,5 @@ void showConfirmationDialog(BuildContext context) {
       );
     },
   );
+}
 }
