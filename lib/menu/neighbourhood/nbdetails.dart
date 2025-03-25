@@ -1,15 +1,14 @@
-
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../styles/styles.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 class ReqDetailsPage extends StatelessWidget {
-  final Map<String,dynamic> requestDetails;
+  final Map<String, dynamic> requestDetails;
   const ReqDetailsPage({super.key, required this.requestDetails});
-  
 
   @override
   Widget build(BuildContext context) {
-    // Request details stored as a JSON-like Map
-
     return Scaffold(
       backgroundColor: Styles.darkPurple, // Set background color
       body: SingleChildScrollView(
@@ -35,7 +34,6 @@ class ReqDetailsPage extends StatelessWidget {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
               child: Column(
@@ -45,46 +43,34 @@ class ReqDetailsPage extends StatelessWidget {
                   buildInfoContainer(
                     requestDetails["name"],
                   ),
-
                   const SizedBox(height: 10),
-
                   buildInfoContainer(
                     'Description: ',
                     value: requestDetails["description"],
                   ),
-
                   const SizedBox(height: 10),
-
                   // Created Time
                   buildInfoContainer("Address:", value: requestDetails["address"]),
-
                   const SizedBox(height: 10),
-
                   // End Time
                   buildInfoContainer("City:", value: requestDetails["city"]),
-
                   const SizedBox(height: 10),
-
                   // Amount
                   buildInfoContainer("State:", value: requestDetails["state"]),
-
                   const SizedBox(height: 10),
-
                   // Status Container
                   buildInfoContainer(
                     "Zip:",
                     value: requestDetails["zip"],
                   ),
-
                   const SizedBox(height: 14),
-
-                  // Cancel Request Button
+                  // Join Neighbourhood Button
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: TextButton(
                       onPressed: () {
-                        showConfirmationDialog(context);
+                        showConfirmationDialog(context, requestDetails["id"]);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[400],
@@ -155,7 +141,7 @@ class ReqDetailsPage extends StatelessWidget {
 }
 
 // Confirmation Dialog Function
-void showConfirmationDialog(BuildContext context) {
+void showConfirmationDialog(BuildContext context, String neighbourhoodId) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -200,7 +186,8 @@ void showConfirmationDialog(BuildContext context) {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await joinNeighbourhood(neighbourhoodId);
                     Navigator.pop(context);
                   },
                   style: TextButton.styleFrom(
@@ -226,4 +213,27 @@ void showConfirmationDialog(BuildContext context) {
       );
     },
   );
+}
+
+// Function to add neighbourhood ID to the current user's collection
+Future<void> joinNeighbourhood(String neighbourhoodId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final _userType = prefs.getString('userType') ?? "User"; // Fallback if not found
+  print ("User Name: $_userType");
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("Error: User not logged in");
+      return;
+    }
+
+    DocumentReference userDocRef = FirebaseFirestore.instance.collection(_userType).doc(user.uid);
+
+    // Update the user document by adding the field
+    await userDocRef.set({'neighbourhoodId': neighbourhoodId}, SetOptions(merge: true));
+
+    print("Neighbourhood ID added successfully");
+  } catch (e) {
+    print("Error joining neighborhood: $e");
+  }
 }
