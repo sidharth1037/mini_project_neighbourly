@@ -7,10 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-String get apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
+// final config = Config();
+String apiKey = '';  //config.apiKey;
 
+const String geminiEndpoint = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent';
 
 class VolRequestsPage extends StatefulWidget {
   const VolRequestsPage({super.key});
@@ -21,6 +22,7 @@ class VolRequestsPage extends StatefulWidget {
 
 class RequestsPageState extends State<VolRequestsPage> {
   List<Map<String, dynamic>> requests = []; // State variable to store fetched requests
+    final ValueNotifier<List<dynamic>> filteredItems = ValueNotifier([]);
   bool isLoading = true; // State to track loading status
   String errorMessage = ""; // State to store error message
 
@@ -64,17 +66,24 @@ class RequestsPageState extends State<VolRequestsPage> {
           .where('neighbourhood', isEqualTo: neighbourhoodId)
           .get();
 
+      // Include the document ID as an attribute for each document
+      requests = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // Add the document ID
+        return data;
+      }).toList();
+
       if (mounted) {
         setState(() {
-          requests = querySnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+          // requests = querySnapshot.docs
+          // .map((doc) => doc.data() as Map<String, dynamic>)
+          // .toList();
 
           // Sort the requests by timestamp in descending order
           requests.sort((a, b) {
-        final timestampA = a['timestamp'] ?? 0;
-        final timestampB = b['timestamp'] ?? 0;
-        return timestampB.compareTo(timestampA);
+            final timestampA = a['timestamp'] ?? 0;
+            final timestampB = b['timestamp'] ?? 0;
+            return timestampB.compareTo(timestampA);
           });
 
           isLoading = false;
@@ -155,7 +164,7 @@ class RequestsPageState extends State<VolRequestsPage> {
   }
 }
 
-class RequestBox extends StatelessWidget {
+class RequestBox extends StatefulWidget {
   final Map<String, dynamic> request; // Request object containing all data
   final VoidCallback? onTap; // Callback for button press
 
@@ -165,13 +174,13 @@ class RequestBox extends StatelessWidget {
     this.onTap, // Allows passing a function when tapped
   });
 
-  static const String geminiEndpoint =
-      'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent';
+  @override
+  State<RequestBox> createState() => _RequestBoxState();
+}
 
+class _RequestBoxState extends State<RequestBox> {
   Future<List<String>> extractKeywords(String inputText) async {
-    
     WidgetsFlutterBinding.ensureInitialized();
-    await dotenv.load();
 
     final Map<String, dynamic> payload = {
       "contents": [
@@ -202,7 +211,7 @@ class RequestBox extends StatelessWidget {
         List<String> keywords = List<String>.from(
           data["candidates"][0]["content"]["parts"][0]["text"].split(','),
         );
-        return keywords;
+        return keywords.map((keyword) => keyword.trim()).toList();
       } else {
         print('Error: ${response.statusCode} - ${response.body}');
         return [];
@@ -213,28 +222,38 @@ class RequestBox extends StatelessWidget {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    final String textdesc = widget.request["description"] ?? "Cannot Fetch";
+    extractKeywords(textdesc).then((keywords) {
+      // DocumentReference userDocRef = FirebaseFirestore.instance.collection("current_requests").doc(widget.request["id"]);
+      // // Update the user document by adding the field
+      // userDocRef.set({'tags': keywords}, SetOptions(merge: true));
+      print(widget.request["id"]);
+      print("Extracted Keywords: $keywords");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final String title = request["requestType"] ?? "Unknown";
-    final String time = request["time"] ?? "N/A";
-    final String date = request["date"] != null
-        ? (DateTime.tryParse(request["date"]) != null
-            ? "${DateTime.parse(request["date"]).day.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).month.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).year.toString().substring(2)}"
+    final String title = widget.request["requestType"] ?? "Unknown";
+    final String time = widget.request["time"] ?? "N/A";
+    final String date = widget.request["date"] != null
+        ? (DateTime.tryParse(widget.request["date"]) != null
+            ? "${DateTime.parse(widget.request["date"]).day.toString().padLeft(2, '0')}-${DateTime.parse(widget.request["date"]).month.toString().padLeft(2, '0')}-${DateTime.parse(widget.request["date"]).year.toString().substring(2)}"
             : "Invalid Date")
         : "N/A";
-    final String status = request["status"] ?? "Unknown";
-    final String amount = "${request["amount"] ?? "0.00"} ₹";
-    final String textdesc = request["description"] ?? "Cannot Fetch";
-
-    print(extractKeywords(textdesc));
+    final String status = widget.request["status"] ?? "Unknown";
+    final String amount = "${widget.request["amount"] ?? "0.00"} ₹";
+    // final String textdesc = widget.request["description"] ?? "Cannot Fetch";
 
     return TextButton(
       onPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ReqDetailsPage(request: request), // Pass request to ReqDetailsPage
+            builder: (context) => ReqDetailsPage(request: widget.request), // Pass request to ReqDetailsPage
           ),
         );
       }, // Trigger the callback when tapped
