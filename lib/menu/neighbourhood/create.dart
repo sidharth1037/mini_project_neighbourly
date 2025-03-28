@@ -1,7 +1,42 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mini_ui/navbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../styles/custom_style.dart';
 import 'package:flutter/material.dart';
 import '../../styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+Future<void> joinNeighbourhood(String neighbourhoodId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final userType = prefs.getString('userType') ?? "User"; // Fallback if not found
+  print ("User Name: $userType");
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("Error: User not logged in");
+      return;
+    }
+
+    DocumentReference userDocRef = FirebaseFirestore.instance.collection(userType).doc(user.uid);
+
+    // Update the user document by adding the field
+    await userDocRef.set({'neighbourhoodId': neighbourhoodId}, SetOptions(merge: true));
+    await prefs.setString('neighbourhoodId', neighbourhoodId);
+
+    await FirebaseFirestore.instance
+        .collection('neighbourhood') // Change to your collection name
+        .doc(neighbourhoodId)
+        .update({
+          userType: FieldValue.increment(1), // Increment by 1
+        });
+
+    print("Neighbourhood ID added successfully");
+  } catch (e) {
+    print("Error joining neighborhood: $e");
+  }
+}
+
 
 class CreateNeighbourhood extends StatelessWidget with CustomStyle {
   CreateNeighbourhood({super.key});
@@ -17,7 +52,7 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
     && state.isNotEmpty && zip.isNotEmpty && description.isNotEmpty)
       {try
         {
-          await FirebaseFirestore.instance.collection('neighbourhood').add({
+          DocumentReference neighborhoodRef= await FirebaseFirestore.instance.collection('neighbourhood').add({
             'name':name,
             'address':address,
             'city':city,
@@ -25,7 +60,12 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
             'zip':zip,
             'description':description,
             'timestamp':FieldValue.serverTimestamp(),
+            'volunteers': 0,
+            'homebound': 0,
           });
+          String nhId = neighborhoodRef.id;
+          joinNeighbourhood(nhId);
+
           print("neighbourhood created");}
           catch(e){print("error: $e");}
         }
@@ -209,9 +249,13 @@ void showConfirmationDialog(BuildContext context) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Neighbourhood added successfully!")),
                           );
-           
-                    Navigator.pop(context1);
-                    Navigator.pop(context);
+                    Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const MainScreen()),
+                          (route) => false, // Removes all previous routes
+                        ); 
+                    // Navigator.pop(context1);
+                    // Navigator.pop(context);
                    
                   },
                   style: TextButton.styleFrom(

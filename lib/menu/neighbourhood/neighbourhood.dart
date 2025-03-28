@@ -4,22 +4,137 @@ import 'join.dart';
 import 'package:flutter/material.dart';
 import '../../styles/styles.dart'; 
 import '../../styles/custom_style.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-bool joined = false;
+
+Future<Map<String, dynamic>> getNeighbourhoodDetails(String nhId) async {
+  DocumentSnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+      .collection('neighbourhood')
+      .doc(nhId)
+      .get();
+  
+  return querySnapshot.data() ?? {};
+
+}
+
+  Future<String> check() async{
+  final prefs = await SharedPreferences.getInstance();
+  String joindet = prefs.getString('neighbourhoodId') ?? '' ;
+  // joined = await check()==''?false:true;
+  // return joindet;
+  print(joindet);
+
+  return joindet;
+}
+
 List<Map<String, dynamic>> contents = [
   {"icon": Icons.group_add, "label": "Join", "Navigation": JoinNeighbourhood()},
   {"icon": Icons.add_home, "label": "Create", "Navigation": CreateNeighbourhood()}
 ];
 
-class Neighbourhood extends StatelessWidget with CustomStyle {
+class Neighbourhood extends StatefulWidget with CustomStyle {
   Neighbourhood({super.key});
+
+  @override
+  _NeighbourhoodState createState() => _NeighbourhoodState();
+}
+
+class _NeighbourhoodState extends State<Neighbourhood> {
+  bool joined = false;
+  bool _isLoading = true;
+  String nhId = '';
+  Map<String,dynamic> nhdetails={};
+  @override
+  void initState() {
+    super.initState();
+    _checkNeighbourhoodStatus();
+
+  }
+  @override
+    void didChangeDependencies() {
+    super.didChangeDependencies();
+    setState(() {});
+  }
+
+  Future<void> _checkNeighbourhoodStatus() async {
+    String joindet = await check();
+    if(joindet.isNotEmpty){
+      Map<String,dynamic> nhdetails1 = await getNeighbourhoodDetails(joindet);
+      print(nhdetails1);
+      if(nhdetails1.isNotEmpty){
+        setState(() {
+          nhId = joindet;
+          joined = joindet.isNotEmpty;
+          nhdetails=nhdetails1;
+          _isLoading = false;
+        });
+      }
+      else{
+        setState(() {
+          joined = false;
+          _isLoading = false;
+        });
+      }
+    }
+    else{
+      setState(() {
+        joined = false;
+        _isLoading = false;
+      });
+    }
+    
+
+  }
+
+  void removeField() async {
+  try {
+    setState(() {
+      _isLoading = true;
+    });
+    final user = await SharedPreferences.getInstance();
+    String userType=user.getString('userType')??'';
+    String userId=user.getString('userId')??'';
+    user.remove("neighbourhoodId");
+    await FirebaseFirestore.instance
+        .collection(userType) // Change to your collection name
+        .doc(userId)
+        .update({
+          'neighbourhoodId': FieldValue.delete(),// Replace 'fieldName' with the actual field name
+        });
+    await FirebaseFirestore.instance
+        .collection('neighbourhood') // Change to your collection name
+        .doc(nhId)
+        .update({
+          userType: FieldValue.increment(-1),// Replace 'fieldName' with the actual field name
+        });
+
+    print('Field removed successfully');
+    setState(() {
+      joined = false;
+      _isLoading = false;
+    });
+  } catch (e) {
+    print('Error removing field: $e');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
     double deviceWidth = MediaQuery.of(context).size.width;
     double deviceHeight = MediaQuery.of(context).size.height;
-
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Styles.darkPurple,
+        body: Center(
+          child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),),
+        ),
+      );
+    }
+    else{
     if (joined) {
+
       return Scaffold(
         body: DecoratedBox(
           decoration: BoxDecoration(color: Styles.darkPurple),
@@ -29,20 +144,20 @@ class Neighbourhood extends StatelessWidget with CustomStyle {
                 height: deviceHeight * 0.33,
                 alignment: Alignment.center,
                 child: Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text("Your Neighbourhood", style: Styles.titleStyle, textAlign: TextAlign.center),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    child: BackButton(
-                      color: Styles.white,
-                      onPressed: () => Navigator.pop(context),
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text("Your Neighbourhood", style: Styles.titleStyle, textAlign: TextAlign.center),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 20,
+                      left: 20,
+                      child: BackButton(
+                        color: Styles.white,
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(
@@ -51,24 +166,27 @@ class Neighbourhood extends StatelessWidget with CustomStyle {
                   padding: const EdgeInsets.all(20),
                   children: [
                     RequestBox(
-                      title: "Green Park",
-                      homebound: "5",
-                      volunteer: "10",
-                      status: "Active",
-                      areacode: "112345",
+                            title: nhdetails['name'] ?? 'Unknown',
+                            homebound: nhdetails['homebound']?.toString() ?? '0',
+                            volunteer: nhdetails['volunteer']?.toString() ?? '0',
+                            address: nhdetails['address'] ?? 'No Address',
+                            areacode: nhdetails['zip'] ?? '00000',
                     ),
                   ],
                 ),
               ),
-              // Button in the bottom 1/3rd of the screen
-              SizedBox(height: deviceHeight * 0.1), // Adds space before the button
+              SizedBox(height: deviceHeight * 0.1),
               Center(
                 child: SizedBox(
-                  width: deviceWidth * 0.5, // Reduce width to half of the device width
-                  height: deviceHeight * 0.07, // Increase button height
+                  width: deviceWidth * 0.5,
+                  height: deviceHeight * 0.07,
                   child: ElevatedButton(
                     onPressed: () {
                       // Leave neighbourhood action
+                      removeField();
+                      if(_isLoading==false){
+                        Navigator.pop(context);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Styles.lightPurple,
@@ -84,24 +202,26 @@ class Neighbourhood extends StatelessWidget with CustomStyle {
                   ),
                 ),
               ),
-              SizedBox(height: deviceHeight * 0.05), // Adds space below the button
+              SizedBox(height: deviceHeight * 0.05),
             ],
           ),
         ),
       );
     } else {
-      return Home(content: contents, title: "Join or Create\nNeighbourhood",backbutton: true,);
+      return Home(content: contents, title: "Join or Create\nNeighbourhood", backbutton: true);
+    }
+    }
   }
 }
 
  
-}
+
 
 class RequestBox extends StatelessWidget {
   final String title;
   final String homebound;
   final String volunteer;
-  final String status;
+  final String address;
   final String areacode; // Callback for button press
 
   const RequestBox({
@@ -109,7 +229,7 @@ class RequestBox extends StatelessWidget {
     required this.title,
     required this.homebound,
     required this.volunteer,
-    required this.status,
+    required this.address,
     required this.areacode, // Allows passing a function when tapped
   });
 
@@ -144,7 +264,7 @@ class RequestBox extends StatelessWidget {
                     const SizedBox(width: 5),
                     _buildPill("Zip code: $areacode"),
                     const SizedBox(width: 5),
-                    _buildPill(status, isStatus: true),
+                    _buildPill("Address: $address"),
                   ],
                 ),
               ],
@@ -159,7 +279,7 @@ class RequestBox extends StatelessWidget {
   }
 
   // Helper function to create pill-shaped containers
-  Widget _buildPill(String text, {bool isStatus = false}) {
+  Widget _buildPill(String text) {
     return Center(
       child: 
         Container(

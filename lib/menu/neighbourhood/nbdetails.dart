@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:mini_ui/menu/neighbourhood/neighbourhood.dart';
+import 'package:mini_ui/navbar.dart';
 import '../../styles/styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 class ReqDetailsPage extends StatelessWidget {
@@ -141,9 +143,9 @@ class ReqDetailsPage extends StatelessWidget {
 }
 
 // Confirmation Dialog Function
-void showConfirmationDialog(BuildContext context, String neighbourhoodId) {
+void showConfirmationDialog(BuildContext context1, String neighbourhoodId) {
   showDialog(
-    context: context,
+    context: context1,
     builder: (BuildContext context) {
       return AlertDialog(
         backgroundColor: Styles.mildPurple,
@@ -188,7 +190,11 @@ void showConfirmationDialog(BuildContext context, String neighbourhoodId) {
                 child: TextButton(
                   onPressed: () async {
                     await joinNeighbourhood(neighbourhoodId);
-                    Navigator.pop(context);
+                    Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const MainScreen()),
+                          (route) => false, // Removes all previous routes
+                        );  
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.green[400],
@@ -231,6 +237,13 @@ Future<void> joinNeighbourhood(String neighbourhoodId) async {
 
     // Update the user document by adding the field
     await userDocRef.set({'neighbourhoodId': neighbourhoodId}, SetOptions(merge: true));
+    await prefs.setString('neighbourhoodId', neighbourhoodId);
+    await FirebaseFirestore.instance
+        .collection('neighbourhood') // Change to your collection name
+        .doc(neighbourhoodId)
+        .update({
+          _userType: FieldValue.increment(1), // Increment by 1
+        });
 
     print("Neighbourhood ID added successfully");
   } catch (e) {
