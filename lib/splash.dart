@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:mini_ui/navbar.dart';
 import 'package:mini_ui/screens/screen_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import './organization/create.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  SplashScreenState createState() => SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -47,32 +48,53 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _navigateToNextScreen() async {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final userType = prefs.getString('userType') ?? '';
+    String organizationName = '';
+
+    if (userType == 'organization') {
+      organizationName = prefs.getString('orgName') ?? 'none';
+    }
 
     if (isLoggedIn) {
+      if (userType == 'organization' && organizationName == 'none') {
       Navigator.of(context).pushReplacement(PageRouteBuilder(
         transitionDuration:
-            const Duration(milliseconds: 500), // Smooth transition duration
+          const Duration(milliseconds: 500), // Smooth transition duration
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const MainScreen(),
+          const CreateOrganization(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
         },
       ));
-    } else {
+      } else {
       Navigator.of(context).pushReplacement(PageRouteBuilder(
         transitionDuration:
-            const Duration(milliseconds: 500), // Smooth transition duration
+          const Duration(milliseconds: 500), // Smooth transition duration
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const LogInScreen(),
+          const MainScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
         },
+      ));
+      }
+    } else {
+      Navigator.of(context).pushReplacement(PageRouteBuilder(
+      transitionDuration:
+        const Duration(milliseconds: 500), // Smooth transition duration
+      pageBuilder: (context, animation, secondaryAnimation) =>
+        const LogInScreen(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+        opacity: animation,
+        child: child,
+        );
+      },
       ));
     }
   }
@@ -88,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
     return AnimatedOpacity(
       opacity: _fadeAnimation.value,
       duration: const Duration(milliseconds: 500), // Fade-out duration
-      child: Scaffold(
+      child: const Scaffold(
         backgroundColor: const Color(0xFF2D1E59), // Dark Purple
         body: const Center(
           child: Text(

@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 // final config = Config();
-String apiKey = '';  //config.apiKey;
+String apiKey = 'AIzaSyCGeJBG4e82liskoLF4cqY-vDXz1wJUexQ';  //config.apiKey;
 
 const String geminiEndpoint = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent';
 
@@ -68,7 +68,7 @@ class RequestsPageState extends State<VolRequestsPage> {
       });
 
       requestsNotifier.value = fetchedRequests;
-      errorMessageNotifier.value = fetchedRequests.isEmpty ? "No current requests." : "success";
+      errorMessageNotifier.value = fetchedRequests.isEmpty ? "No new requests." : "success";
     } catch (e) {
       errorMessageNotifier.value = "An error occurred. Try again later.";
     } finally {

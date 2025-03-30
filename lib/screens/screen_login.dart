@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mini_ui/navbar.dart';
+// import 'package:mini_ui/navbar.dart';
 import 'package:mini_ui/screens/auth_service.dart';
+import 'package:mini_ui/splash.dart';
 import 'package:mini_ui/styles/styles.dart';
 import 'screen_signup.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -88,6 +89,7 @@ class LoginScreenState extends State<LogInScreen> {
           await prefs.setString('userEmail', userData?['email'] ?? '');
           await prefs.setString('userAddress', userData?['address'] ?? '');
           await prefs.setString('neighbourhoodId', userData?['neighbourhoodId'] ?? '');
+          await prefs.setString('orgName', userData?['orgName'] ?? 'none');
 
           setState(() => _isLoading = false);
           _goToHome();
@@ -109,7 +111,7 @@ class LoginScreenState extends State<LogInScreen> {
   void _goToHome() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const MainScreen()),
+      MaterialPageRoute(builder: (context) => const SplashScreen()),
     );
   }
 
