@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mini_ui/navbar.dart';
 import 'package:mini_ui/screens/screen_login.dart';
+import 'package:mini_ui/volunteers/vol_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import './organization/create.dart';
 
@@ -50,52 +51,76 @@ class SplashScreenState extends State<SplashScreen>
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     final userType = prefs.getString('userType') ?? '';
     String organizationName = '';
+    List<String> serviceList = [];
 
     if (userType == 'organization') {
       organizationName = prefs.getString('orgName') ?? 'none';
+    } else if (userType == 'volunteers') {
+      serviceList = prefs.getStringList('services') ?? [];
     }
 
     if (isLoggedIn) {
       if (userType == 'organization' && organizationName == 'none') {
-      Navigator.of(context).pushReplacement(PageRouteBuilder(
-        transitionDuration:
-          const Duration(milliseconds: 500), // Smooth transition duration
-        pageBuilder: (context, animation, secondaryAnimation) =>
-          const CreateOrganization(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-        },
-      ));
+        if(mounted) {
+          Navigator.of(context).pushReplacement(PageRouteBuilder(
+            transitionDuration:
+              const Duration(milliseconds: 500), // Smooth transition duration
+            pageBuilder: (context, animation, secondaryAnimation) =>
+              const CreateOrganization(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+            },
+          ));
+        }
+      } else if (userType == 'volunteers' && serviceList.isEmpty) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(PageRouteBuilder(
+            transitionDuration:
+              const Duration(milliseconds: 500), // Smooth transition duration
+            pageBuilder: (context, animation, secondaryAnimation) =>
+              const ServicesProvided(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+            },
+          ));
+        }
       } else {
-      Navigator.of(context).pushReplacement(PageRouteBuilder(
-        transitionDuration:
-          const Duration(milliseconds: 500), // Smooth transition duration
-        pageBuilder: (context, animation, secondaryAnimation) =>
-          const MainScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-        },
-      ));
+        if (mounted) {
+          Navigator.of(context).pushReplacement(PageRouteBuilder(
+            transitionDuration:
+              const Duration(milliseconds: 500), // Smooth transition duration
+            pageBuilder: (context, animation, secondaryAnimation) =>
+              const MainScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+            },
+          ));
+        }
       }
     } else {
-      Navigator.of(context).pushReplacement(PageRouteBuilder(
-      transitionDuration:
-        const Duration(milliseconds: 500), // Smooth transition duration
-      pageBuilder: (context, animation, secondaryAnimation) =>
-        const LogInScreen(),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-        opacity: animation,
-        child: child,
-        );
-      },
-      ));
+      if (mounted) {
+        Navigator.of(context).pushReplacement(PageRouteBuilder(
+        transitionDuration:
+          const Duration(milliseconds: 500), // Smooth transition duration
+        pageBuilder: (context, animation, secondaryAnimation) =>
+          const LogInScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+          opacity: animation,
+          child: child,
+          );
+        },
+        ));
+      }
     }
   }
 
@@ -111,8 +136,8 @@ class SplashScreenState extends State<SplashScreen>
       opacity: _fadeAnimation.value,
       duration: const Duration(milliseconds: 500), // Fade-out duration
       child: const Scaffold(
-        backgroundColor: const Color(0xFF2D1E59), // Dark Purple
-        body: const Center(
+        backgroundColor:  Color(0xFF2D1E59), // Dark Purple
+        body:  Center(
           child: Text(
             "NEIGHBOURLY",
             style: TextStyle(

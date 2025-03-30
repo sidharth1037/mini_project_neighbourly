@@ -90,6 +90,7 @@ class LoginScreenState extends State<LogInScreen> {
           await prefs.setString('userAddress', userData?['address'] ?? '');
           await prefs.setString('neighbourhoodId', userData?['neighbourhoodId'] ?? '');
           await prefs.setString('orgName', userData?['orgName'] ?? 'none');
+          await prefs.setStringList('services', userData?['services']?.cast<String>() ?? []);
 
           setState(() => _isLoading = false);
           _goToHome();
@@ -271,12 +272,13 @@ class LoginScreenState extends State<LogInScreen> {
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 12.0, horizontal: 24.0),
-                                child: Text('Log In'),
+                                child: Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
                               ),
                             ),
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           const Text("Don't have an account?",
                               style: TextStyle(

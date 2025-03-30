@@ -49,17 +49,25 @@ class RequestsPageState extends State<VolRequestsPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       String? neighbourhoodId = prefs.getString('neighbourhoodId') ?? "";
+      List<String> selectedServices = prefs.getStringList('services') ?? [];
 
+      // Fetch documents matching the neighbourhood
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('current_requests')
           .where('neighbourhood', isEqualTo: neighbourhoodId)
           .get();
 
-      final fetchedRequests = querySnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
-        return data;
-      }).toList();
+      final fetchedRequests = querySnapshot.docs
+          .where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return selectedServices.contains(data['requestType']);
+          })
+          .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            data['id'] = doc.id;
+            return data;
+          })
+          .toList();
 
       fetchedRequests.sort((a, b) {
         final timestampA = a['timestamp'] ?? 0;

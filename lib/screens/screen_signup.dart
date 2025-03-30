@@ -274,11 +274,12 @@ class SignUpScreenState extends State<SignUpScreen> {
                                 child: const Padding(
                                   padding: EdgeInsets.symmetric(
                                       vertical: 12.0, horizontal: 24.0),
-                                  child: Text('Sign Up'),
+                                  child: Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
                                 ),
                               ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             const Text("Already have an account?",
                                 style: TextStyle(
@@ -357,10 +358,19 @@ class SignUpScreenState extends State<SignUpScreen> {
           );
         }).toList(),
         onChanged: (value) => setState(() => _selectedGender = value!),
-        decoration: Styles.inputDecoration.copyWith(
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.white), // Set arrow color to white
+        decoration: InputDecoration(
           labelText: "Gender",
           labelStyle: const TextStyle(color: Styles.white),
           prefixIcon: const Icon(Icons.person, color: Styles.white),
+          enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+          ),
         ),
       ),
     );

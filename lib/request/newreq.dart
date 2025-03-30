@@ -16,9 +16,9 @@ class NewRequestPage extends StatefulWidget {
 class NewRequestPageState extends State<NewRequestPage> {
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
-  String selectedRequest = "Buy Groceries";
+  String selectedRequest = "Grocery Shopping";
   String requestAt = "Neighbourhood";
-  String selectedGender = "Male";
+  String selectedGender = "Any";
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   bool _isLoading = false;
@@ -307,7 +307,20 @@ class NewRequestPageState extends State<NewRequestPage> {
                           style: Styles.bodyStyle,
                           isExpanded: true,
                           icon: const Icon(Icons.arrow_drop_down, color: Colors.white), // Changed arrow color to white
-                          items: ["Buy Groceries", "Drive to a Place", "Gardening"]
+                          items: [
+                            "Driving",
+                            "Grocery Shopping",
+                            "Gardening",
+                            "Dog Walking",
+                            "Technical Support",
+                            "House Cleaning",
+                            "Meal Delivery",
+                            "Medication Pickup",
+                            "Companionship Visits",
+                            "Mail and Package Handling",
+                            "Light Home Repairs",
+                            "Wheelchair Assistance",
+                          ]
                               .map((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
