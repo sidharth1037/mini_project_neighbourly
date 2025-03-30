@@ -21,144 +21,131 @@ class VolRequestsPage extends StatefulWidget {
 }
 
 class RequestsPageState extends State<VolRequestsPage> {
-  List<Map<String, dynamic>> requests = []; // State variable to store fetched requests
-    final ValueNotifier<List<dynamic>> filteredItems = ValueNotifier([]);
-  bool isLoading = true; // State to track loading status
-  String errorMessage = ""; // State to store error message
+  final ValueNotifier<List<Map<String, dynamic>>> requestsNotifier = ValueNotifier([]);
+  final ValueNotifier<bool> isLoadingNotifier = ValueNotifier(true);
+  final ValueNotifier<String> errorMessageNotifier = ValueNotifier("");
 
   @override
   void initState() {
     super.initState();
-    fetchAllRequests(); // Call the function when the page is rendered
+    fetchAllRequests();
   }
 
   Future<void> fetchAllRequests() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      if (mounted) {
-        setState(() {
-          errorMessage = "User not logged in";
-          isLoading = false;
-        });
-      }
+      errorMessageNotifier.value = "User not logged in";
+      isLoadingNotifier.value = false;
       return;
     }
 
-    // Check for internet connection
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      if (mounted) {
-        setState(() {
-          errorMessage = "No network connection. Try again later.";
-          isLoading = false;
-        });
-      }
+      errorMessageNotifier.value = "No network connection. Try again later.";
+      isLoadingNotifier.value = false;
       return;
     }
 
     try {
-
       final prefs = await SharedPreferences.getInstance();
-      String? neighbourhoodId =  prefs.getString('neighbourhoodId')??"";
+      String? neighbourhoodId = prefs.getString('neighbourhoodId') ?? "";
 
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('current_requests')
           .where('neighbourhood', isEqualTo: neighbourhoodId)
           .get();
 
-      // Include the document ID as an attribute for each document
-      requests = querySnapshot.docs.map((doc) {
+      final fetchedRequests = querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id; // Add the document ID
+        data['id'] = doc.id;
         return data;
       }).toList();
 
-      if (mounted) {
-        setState(() {
-          // requests = querySnapshot.docs
-          // .map((doc) => doc.data() as Map<String, dynamic>)
-          // .toList();
+      fetchedRequests.sort((a, b) {
+        final timestampA = a['timestamp'] ?? 0;
+        final timestampB = b['timestamp'] ?? 0;
+        return timestampB.compareTo(timestampA);
+      });
 
-          // Sort the requests by timestamp in descending order
-          requests.sort((a, b) {
-            final timestampA = a['timestamp'] ?? 0;
-            final timestampB = b['timestamp'] ?? 0;
-            return timestampB.compareTo(timestampA);
-          });
-
-          isLoading = false;
-          errorMessage = requests.isEmpty ? "No current requests." : "success"; // Show message if no requests
-        });
-      }
+      requestsNotifier.value = fetchedRequests;
+      errorMessageNotifier.value = fetchedRequests.isEmpty ? "No current requests." : "success";
     } catch (e) {
-      debugPrint("Error while fetching data: $e");
-      if (mounted) {
-        setState(() {
-          errorMessage = "An error occurred. Try again later.";
-          isLoading = false;
-        });
-      }
+      errorMessageNotifier.value = "An error occurred. Try again later.";
+    } finally {
+      isLoadingNotifier.value = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Styles.darkPurple, // Set background color
-      body: Stack(
-        children: [
-          // Scrollable Request List
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100), // Avoid overlapping with button
-            child: Column(
-              children: [
-                // Title Section
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.33,
-                  child: const Center(
-                    child: Text("Requests", style: Styles.titleStyle),
-                  ),
+      backgroundColor: Styles.darkPurple,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await fetchAllRequests();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.33,
+                child: const Center(
+                  child: Text("Requests", style: Styles.titleStyle),
                 ),
-
-                // Request Cards Section
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
-                  child: isLoading
-                        ? const Center(
+              ),
+              ValueListenableBuilder<bool>(
+                valueListenable: isLoadingNotifier,
+                builder: (context, isLoading, _) {
+                  return isLoading
+                      ? const Center(
                           child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
-                        ) // Show loading indicator
-                        : errorMessage == "success"
-                          ? Column(
-                            children: requests.map((request) {
-                            return RequestBox(request: request,);
-                            }).toList(),
-                          )
-                            : Center(
-                            child: Container(
-                              margin: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                              color: Styles.mildPurple,
-                              borderRadius: BorderRadius.circular(20),
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                              errorMessage,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                              ),
-                            ),
-                            ),
-                ),
-              ],
-            ),
+                        )
+                      : ValueListenableBuilder<String>(
+                          valueListenable: errorMessageNotifier,
+                          builder: (context, errorMessage, _) {
+                            return errorMessage == "success"
+                                ? ValueListenableBuilder<List<Map<String, dynamic>>>(
+                                    valueListenable: requestsNotifier,
+                                    builder: (context, requests, _) {
+                                      return Padding(
+                                        padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
+                                        child: Column(
+                                          children: requests.map((request) {
+                                            return RequestBox(request: request);
+                                          }).toList(),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : Center(
+                                    child: Container(
+                                      margin: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: Styles.mildPurple,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: Text(
+                                        errorMessage,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  );
+                          },
+                        );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -179,16 +166,19 @@ class RequestBox extends StatefulWidget {
 }
 
 class _RequestBoxState extends State<RequestBox> {
+  bool isLoading = true; // State to track loading status
+  List<String>? keywords; // Variable to store extracted keywords
+
   Future<List<String>> extractKeywords(String inputText) async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    final Map<String, dynamic> payload = {
+    final payload = {
       "contents": [
         {
           "parts": [
             {
               "text":
-                  " Example 1: I need help to buy groceries from the towncenter. The keywords here are: buy, groceries, towncenter. Example 2: I need help to fetch my pet from the vet. The keywords here are: fetch, pet, vet. Based on the given example, extract keywords from the following text and return them in a JSON list: \"$inputText\"",
+                  " Example 1: I need help to buy groceries from the towncenter. The keywords here are: Buy, Groceries, Towncenter. Example 2: I need help to fetch my pet from the vet. The keywords here are: Fetch, Pet, Vet. Based on the given example, extract keywords(at most 4 keywords, first letter should be upper case) from the following text and return them in a JSON list: \"$inputText\"",
             },
           ],
         },
@@ -198,6 +188,11 @@ class _RequestBoxState extends State<RequestBox> {
     final headers = {'Content-Type': 'application/json'};
 
     try {
+      
+      if (widget.request['tags'] is List && (widget.request['tags'] as List).isNotEmpty) {
+        return List<String>.from(widget.request['tags']);
+      }
+
       final response = await http.post(
         Uri.parse('$geminiEndpoint?key=$apiKey'),
         headers: headers,
@@ -206,32 +201,43 @@ class _RequestBoxState extends State<RequestBox> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
-        // Extract keywords (assuming the API returns JSON like {"keywords": ["urgent", "hospital", "pain"]})
-        List<String> keywords = List<String>.from(
-          data["candidates"][0]["content"]["parts"][0]["text"].split(','),
+        final keywords = List<String>.from(
+          data["candidates"][0]["content"]["parts"][0]["text"]
+              .replaceAll(RegExp(r'^```json|```|\[|\]'), '')
+              .replaceAll('"', '')
+              .split(','),
         );
+
+        if (keywords.isNotEmpty) {
+          final userDocRef = FirebaseFirestore.instance
+          .collection("current_requests")
+          .doc(widget.request["id"]);
+          await userDocRef.set({'tags': keywords}, SetOptions(merge: true));
+        }
         return keywords.map((keyword) => keyword.trim()).toList();
       } else {
-        print('Error: ${response.statusCode} - ${response.body}');
         return [];
       }
     } catch (e) {
-      print('Exception: $e');
       return [];
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   @override
   void initState() {
     super.initState();
-    final String textdesc = widget.request["description"] ?? "Cannot Fetch";
-    extractKeywords(textdesc).then((keywords) {
-      // DocumentReference userDocRef = FirebaseFirestore.instance.collection("current_requests").doc(widget.request["id"]);
-      // // Update the user document by adding the field
-      // userDocRef.set({'tags': keywords}, SetOptions(merge: true));
-      print(widget.request["id"]);
-      print("Extracted Keywords: $keywords");
+    extractKeywords(widget.request["description"] ?? "Error").then((result) {
+      if (mounted) {
+        setState(() {
+          keywords = result; // Save the extracted keywords in the list
+        });
+      }
     });
   }
 
@@ -239,69 +245,117 @@ class _RequestBoxState extends State<RequestBox> {
   Widget build(BuildContext context) {
     final String title = widget.request["requestType"] ?? "Unknown";
     final String time = widget.request["time"] ?? "N/A";
-    final String date = widget.request["date"] != null
-        ? (DateTime.tryParse(widget.request["date"]) != null
-            ? "${DateTime.parse(widget.request["date"]).day.toString().padLeft(2, '0')}-${DateTime.parse(widget.request["date"]).month.toString().padLeft(2, '0')}-${DateTime.parse(widget.request["date"]).year.toString().substring(2)}"
-            : "Invalid Date")
-        : "N/A";
+    final String date = _formatDate(widget.request["date"]);
     final String status = widget.request["status"] ?? "Unknown";
     final String amount = "${widget.request["amount"] ?? "0.00"} ₹";
-    // final String textdesc = widget.request["description"] ?? "Cannot Fetch";
 
     return TextButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ReqDetailsPage(request: widget.request), // Pass request to ReqDetailsPage
-          ),
-        );
-      }, // Trigger the callback when tapped
+      onPressed: () => _navigateToDetails(context),
       child: Container(
-        decoration: Styles.boxDecoration, // Use the same decoration as Profile Page
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10), // Internal padding
+        width: double.infinity,
+        decoration: Styles.boxDecoration,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Left side: Request details (Flexible)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: Styles.nameStyle, softWrap: true, overflow: TextOverflow.ellipsis),
+                  _buildTitle(title),
                   const SizedBox(height: 8),
-                  // Time, Date, and Status Pills (Auto-wrap)
-                  Wrap(
-                    alignment: WrapAlignment.start,
-                    spacing: 5, // Space between pills
-                    runSpacing: 5, // Space between wrapped rows
-                    children: [
-                      Styles.buildPill("Time: $time", Styles.mildPurple),
-                      Styles.buildPill("Date: $date", Styles.mildPurple),
-                    ],
-                  ),
+                  _buildPillsRow(["Time: $time", "Date: $date"]),
                   const SizedBox(height: 8),
-                  Wrap(
-                    alignment: WrapAlignment.start,
-                    spacing: 5, // Space between pills
-                    runSpacing: 5, // Space between wrapped rows
-                    children: [
-                      Styles.buildPill("Amount: $amount", Styles.mildPurple),
-                      Styles.buildPill(status, status == "Accepted" ? Colors.green[500]! : Colors.orange[600]!),
-                    ],
-                  ),
+                  _buildPillsRow([
+                    "Amount: $amount",
+                    status,
+                  ], statusColor: status == "Accepted" ? Colors.green[500]! : Colors.orange[600]!),
+                  const SizedBox(height: 4),
+                  const Divider(color: Colors.white, thickness: 1),
+                  _buildTagsSection(),
                 ],
               ),
             ),
-
-            // Right side: Fixed-size Forward arrow icon
-            const SizedBox(
-              width: 30, // Set fixed width for arrow
-              child: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
-            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDate(String? date) {
+    if (date == null) return "N/A";
+    final parsedDate = DateTime.tryParse(date);
+    if (parsedDate == null) return "Invalid Date";
+    return "${parsedDate.day.toString().padLeft(2, '0')}-${parsedDate.month.toString().padLeft(2, '0')}-${parsedDate.year.toString().substring(2)}";
+  }
+
+  void _navigateToDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReqDetailsPage(request: widget.request),
+      ),
+    );
+  }
+
+  Widget _buildTitle(String title) {
+    return Text(
+      title,
+      style: Styles.nameStyle,
+      softWrap: true,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildPillsRow(List<String> pills, {Color? statusColor}) {
+    return Wrap(
+      alignment: WrapAlignment.start,
+      spacing: 5,
+      runSpacing: 5,
+      children: pills.map((pill) {
+        final isStatus = pill == pills.last && statusColor != null;
+        return Styles.buildPill(pill, isStatus ? statusColor : Styles.mildPurple);
+      }).toList(),
+    );
+  }
+
+  Widget _buildTagsSection() {
+    if (isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 4.0),
+          child: SizedBox(
+        height: 15,
+        width: 15,
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          strokeWidth: 2,
+        ),
+          ),
+        ),
+      );
+    } else if (keywords != null && keywords!.isNotEmpty) {
+      return Wrap(
+        spacing: 5,
+        runSpacing: 5,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          const Text(
+            "AI tags:",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+          ...keywords!.map((keyword) => Styles.buildPill(keyword.trim(), Styles.mildPurple)),
+        ],
+      );
+    } else {
+      return const Center(
+        child: Text(
+          "Unable to load AI tags.",
+          style: TextStyle(color: Colors.white, fontSize: 14),
+        ),
+      );
+    }
   }
 }

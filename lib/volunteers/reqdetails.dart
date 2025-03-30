@@ -94,7 +94,7 @@ class ReqDetailsPage extends StatelessWidget {
                         showConfirmationDialog(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[400],
+                        backgroundColor: Colors.green[400],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                           side: const BorderSide(color: Styles.offWhite, width: 2),
@@ -103,10 +103,10 @@ class ReqDetailsPage extends StatelessWidget {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.cancel, color: Colors.white, size: 26),
+                          Icon(Icons.check, color: Colors.white, size: 26),
                           SizedBox(width: 8),
                           Text(
-                            "Cancel Request",
+                            "Accept Request",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -197,7 +197,7 @@ void showConfirmationDialog(BuildContext context) {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text(
-                    "Do Not Cancel",
+                    "Cancel",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -221,7 +221,7 @@ void showConfirmationDialog(BuildContext context) {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text(
-                    "Cancel Request",
+                    "Accept Request",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,

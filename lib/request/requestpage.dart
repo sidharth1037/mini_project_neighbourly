@@ -49,19 +49,6 @@ class RequestsPageState extends State<RequestsPage> {
     }
 
     try {
-      // QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-      //     .collection('homebound')
-      //     .doc(user.uid)
-      //     .collection('current_requests')
-      //     .orderBy('timestamp', descending: true)
-      //     .get();
-      //     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-      //         .collection('homebound')
-      //         .doc(user.uid)
-      //         .collection('current_requests')
-      //         .where('homeboundId', isEqualTo: user.uid)
-      //         .orderBy('timestamp', descending: true)
-      //         .get();
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('current_requests')
           .where('homeboundId', isEqualTo: user.uid)
@@ -70,14 +57,14 @@ class RequestsPageState extends State<RequestsPage> {
       if (mounted) {
         setState(() {
           requests = querySnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
 
           // Sort the requests by timestamp in descending order
           requests.sort((a, b) {
-        final timestampA = a['timestamp'] ?? 0;
-        final timestampB = b['timestamp'] ?? 0;
-        return timestampB.compareTo(timestampA);
+            final timestampA = a['timestamp'] ?? 0;
+            final timestampB = b['timestamp'] ?? 0;
+            return timestampB.compareTo(timestampA);
           });
 
           isLoading = false;
@@ -101,55 +88,59 @@ class RequestsPageState extends State<RequestsPage> {
       backgroundColor: Styles.darkPurple, // Set background color
       body: Stack(
         children: [
-          // Scrollable Request List
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100), // Avoid overlapping with button
-            child: Column(
-              children: [
-                // Title Section
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.33,
-                  child: const Center(
-                    child: Text("Requests", style: Styles.titleStyle),
+          // Scrollable Request List wrapped in RefreshIndicator
+          RefreshIndicator(
+            onRefresh: fetchAllRequests, // Call fetchAllRequests when pulled to refresh
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 100), // Avoid overlapping with button
+              physics: const AlwaysScrollableScrollPhysics(), // Ensure scrollable even if content is less
+              child: Column(
+                children: [
+                  // Title Section
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.33,
+                    child: const Center(
+                      child: Text("Requests", style: Styles.titleStyle),
+                    ),
                   ),
-                ),
 
-                // Request Cards Section
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
-                  child: isLoading
+                  // Request Cards Section
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
+                    child: isLoading
                         ? const Center(
-                          child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ) // Show loading indicator
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ) // Show loading indicator
                         : errorMessage == "success"
-                          ? Column(
-                            children: requests.map((request) {
-                            return RequestBox(request: request,);
-                            }).toList(),
-                          )
+                            ? Column(
+                                children: requests.map((request) {
+                                  return RequestBox(request: request);
+                                }).toList(),
+                              )
                             : Center(
-                            child: Container(
-                              margin: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                              color: Styles.mildPurple,
-                              borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  margin: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Styles.mildPurple,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    errorMessage,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
                               ),
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                              errorMessage,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                              ),
-                            ),
-                            ),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -164,46 +155,46 @@ class RequestsPageState extends State<RequestsPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.stretch, // Make the column take maximum width
                   children: [
-                  ElevatedButton(
-                    onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const NewRequestPage()),
-                    ).then((_) {
-                      if (mounted) {
-                        setState(() {
-                        isLoading = true;
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const NewRequestPage()),
+                        ).then((_) {
+                          if (mounted) {
+                            setState(() {
+                              isLoading = true;
+                            });
+                          }
+                          // Reload the data when returning to this page
+                          fetchAllRequests();
                         });
-                      }
-                      // Reload the data when returning to this page
-                      fetchAllRequests();
-                    });
-                    },
-                    style: ElevatedButton.styleFrom(
-                    backgroundColor: Styles.mildPurple,
-                    elevation: 10, // Increased elevation for a stronger shadow
-                    shadowColor: Colors.black, // Darker and more visible shadow
-                    padding: const EdgeInsets.symmetric(vertical: 8), // Removed horizontal padding to fit width
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: Color.fromARGB(255, 209, 209, 209), width: 3),
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Styles.mildPurple,
+                        elevation: 10, // Increased elevation for a stronger shadow
+                        shadowColor: Colors.black, // Darker and more visible shadow
+                        padding: const EdgeInsets.symmetric(vertical: 8), // Removed horizontal padding to fit width
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Color.fromARGB(255, 209, 209, 209), width: 3),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min, // Keep button size compact
+                        mainAxisAlignment: MainAxisAlignment.center, // Center text and icon
+                        children: [
+                          Icon(Icons.add, color: Colors.white, size: 40), // Plus icon
+                          SizedBox(width: 8), // Space between icon and text
+                          Text("New Request", style: Styles.buttonTextStyle),
+                        ],
+                      ),
                     ),
+                    Container(
+                      width: MediaQuery.of(context).size.width, // Full device width
+                      height: 10, // Fixed height
+                      color: Styles.darkPurple, // Dark purple color
                     ),
-                    child: const Row(
-                    mainAxisSize: MainAxisSize.min, // Keep button size compact
-                    mainAxisAlignment: MainAxisAlignment.center, // Center text and icon
-                    children: [
-                      Icon(Icons.add, color: Colors.white, size: 40), // Plus icon
-                      SizedBox(width: 8), // Space between icon and text
-                      Text("New Request", style: Styles.buttonTextStyle),
-                    ],
-                    ),
-                  ),
-                  Container(
-                    width: MediaQuery.of(context).size.width, // Full device width
-                    height: 10, // Fixed height
-                    color: Styles.darkPurple, // Dark purple color
-                  ),
                   ],
                 ),
               ),
@@ -231,7 +222,7 @@ class RequestBox extends StatelessWidget {
     final String time = request["time"] ?? "N/A";
     final String date = request["date"] != null
         ? (DateTime.tryParse(request["date"]) != null
-            ? "${DateTime.parse(request["date"]).day.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).month.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).year}"
+            ? "${DateTime.parse(request["date"]).day.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).month.toString().padLeft(2, '0')}-${DateTime.parse(request["date"]).year.toString().substring(2)}"
             : "Invalid Date")
         : "N/A";
     final String status = request["status"] ?? "Unknown";

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -41,6 +42,10 @@ class NewRequestPageState extends State<NewRequestPage> {
         return "Please fill all fields before submitting.";
       }
 
+      final prefs = await SharedPreferences.getInstance();
+      String neighbourhoodId = prefs.getString('neighbourhoodId') ?? ""; // Fallback if not found
+
+
       final requestData = {
         "homeboundId": FirebaseAuth.instance.currentUser!.uid,
         "volunteerId": "",
@@ -50,10 +55,11 @@ class NewRequestPageState extends State<NewRequestPage> {
         "time": selectedTime.format(context),
         "volunteerGender": selectedGender,
         "requestAt": requestAt,
-        "neighbourhood": "None",
+        "neighbourhood": neighbourhoodId,
         "amount": double.tryParse(amountController.text)?.toStringAsFixed(2) ?? "0.00",
         "status": "Waiting",
         "timestamp": FieldValue.serverTimestamp(),
+        "tags": [],
       };
 
       final user = FirebaseAuth.instance.currentUser;
@@ -396,6 +402,32 @@ class NewRequestPageState extends State<NewRequestPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
+                        GestureDetector(
+                          onTap: () {
+                            FocusScope.of(context).requestFocus(FocusNode());
+                          setState(() {
+                            selectedGender = "Any";
+                          });
+                          },
+                          child: Row(
+                          children: [
+                            Radio<String>(
+                            value: "Any",
+                            groupValue: selectedGender,
+                            onChanged: (String? value) {
+                              setState(() {
+                              selectedGender = value!;
+                              });
+                            },
+                            activeColor: Colors.white,
+                            fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                              return Colors.white;
+                            }),
+                            ),
+                            Text("Any", style: Styles.bodyStyle),
+                          ],
+                          ),
+                        ),
                         GestureDetector(
                           onTap: () {
                             FocusScope.of(context).requestFocus(FocusNode());

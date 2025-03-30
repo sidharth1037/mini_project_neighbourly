@@ -1,13 +1,123 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:mini_ui/menu/neighbourhood/neighbourhood.dart';
-import 'package:mini_ui/navbar.dart';
+import 'package:mini_ui/menu/neighbourhood/neighbourhood.dart';
 import '../../styles/styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-class ReqDetailsPage extends StatelessWidget {
+class ReqDetailsPage extends StatefulWidget {
   final Map<String, dynamic> requestDetails;
   const ReqDetailsPage({super.key, required this.requestDetails});
+
+  @override
+  State<ReqDetailsPage> createState() => _ReqDetailsPageState();
+}
+
+class _ReqDetailsPageState extends State<ReqDetailsPage> {
+  bool _isLoading = false;
+
+  void showConfirmationDialog(BuildContext context1, String neighbourhoodId) {
+    showDialog(
+      context: context1,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              backgroundColor: Styles.mildPurple,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text(
+                "Confirmation ",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              content: _isLoading
+                  ? const SizedBox(
+                      height: 80,
+                      width: 40,
+                      child: Center(
+                        child: Column(
+                          children: [
+                            SizedBox(height: 30),
+                            CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : const Text(
+                      "Are you sure you want to join this neighbourhood?",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+              actions: _isLoading
+                  ? []
+                  : [
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                backgroundColor: Styles.lightPurple,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                                onPressed: () async {
+                                setStateDialog(() => _isLoading = true);
+                                await joinNeighbourhood(neighbourhoodId);
+                                if (mounted) {
+                                  int popCount = 0;
+                                  Navigator.of(context).popUntil((route) => popCount++ == 3);
+                                  Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => Neighbourhood()),
+                                  );
+                                }
+                                },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.green[400],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text(
+                                "Confirm",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,27 +153,27 @@ class ReqDetailsPage extends StatelessWidget {
                 children: [
                   // Title and Description Container
                   buildInfoContainer(
-                    requestDetails["name"],
+                    widget.requestDetails["name"],
                   ),
                   const SizedBox(height: 10),
                   buildInfoContainer(
                     'Description: ',
-                    value: requestDetails["description"],
+                    value: widget.requestDetails["description"],
                   ),
                   const SizedBox(height: 10),
                   // Created Time
-                  buildInfoContainer("Address:", value: requestDetails["address"]),
+                  buildInfoContainer("Address:", value: widget.requestDetails["address"]),
                   const SizedBox(height: 10),
                   // End Time
-                  buildInfoContainer("City:", value: requestDetails["city"]),
+                  buildInfoContainer("City:", value: widget.requestDetails["city"]),
                   const SizedBox(height: 10),
                   // Amount
-                  buildInfoContainer("State:", value: requestDetails["state"]),
+                  buildInfoContainer("State:", value: widget.requestDetails["state"]),
                   const SizedBox(height: 10),
                   // Status Container
                   buildInfoContainer(
                     "Zip:",
-                    value: requestDetails["zip"],
+                    value: widget.requestDetails["zip"],
                   ),
                   const SizedBox(height: 14),
                   // Join Neighbourhood Button
@@ -72,7 +182,8 @@ class ReqDetailsPage extends StatelessWidget {
                     height: 56,
                     child: TextButton(
                       onPressed: () {
-                        showConfirmationDialog(context, requestDetails["id"]);
+                        setState(() => _isLoading = false);
+                        showConfirmationDialog(context, widget.requestDetails["id"]);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[400],
@@ -140,85 +251,6 @@ class ReqDetailsPage extends StatelessWidget {
       ),
     );
   }
-}
-
-// Confirmation Dialog Function
-void showConfirmationDialog(BuildContext context1, String neighbourhoodId) {
-  showDialog(
-    context: context1,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Styles.mildPurple,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          "Confirmation ",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        content: const Text(
-          "Are you sure you want to join this neighbourhood?",
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
-        actions: [
-          Column(
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Styles.lightPurple,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () async {
-                    await joinNeighbourhood(neighbourhoodId);
-                    Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MainScreen()),
-                          (route) => false, // Removes all previous routes
-                        );  
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.green[400],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text(
-                    "Confirm",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    },
-  );
 }
 
 // Function to add neighbourhood ID to the current user's collection

@@ -11,6 +11,7 @@ import 'menu/wallet/wallet.dart';
 import 'menu/priority/prioritylist.dart';
 import 'organization/volunteerlist.dart'; // Ensure this contains your colors
 import 'package:shared_preferences/shared_preferences.dart';
+import 'volunteers/vol_requests.dart';
 
 List<Map<String, dynamic>> contentsHomebound=[
         {"icon":Icons.history,"label":"Request\nHistory","Navigation": const ReqHistoryPage()},
@@ -82,7 +83,7 @@ class MainScreenState extends State<MainScreen> {
     } else if (userType == 'volunteers') {
       // Set pages and nav items for homebound
       pages = [
-        const RequestsPage(),
+        const VolRequestsPage(),
         Home(content: contentsVolunteer, title: "Menu", backbutton: false),
         const ProfilePage(),
       ];
