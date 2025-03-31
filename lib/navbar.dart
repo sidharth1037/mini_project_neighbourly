@@ -61,12 +61,10 @@ class MainScreenState extends State<MainScreen> {
       // Set pages and nav items for organizations
       pages = [
         const VolunteerListPage(), // Replace with Volunteers Page
-        const RequestsPage(),
         const ProfilePage(),
       ];
       navItems = const [
         BottomNavigationBarItem(icon: Icon(Icons.volunteer_activism), label: 'Volunteers'),
-        BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ];
     } else if (userType == 'homebound') {

@@ -126,7 +126,7 @@ class ServicesProvidedState extends State<ServicesProvided> with CustomStyle {
                     child: Column(
                       children: [
                         SizedBox(
-                          height: deviceHeight * 0.45, // Adjust height as needed
+                          height: deviceHeight * 0.43, // Adjust height as needed
                           child: Scrollbar(
                             thumbVisibility: true, // Always show scrollbar
                             child: SingleChildScrollView(
