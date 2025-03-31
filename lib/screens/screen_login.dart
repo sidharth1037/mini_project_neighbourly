@@ -90,6 +90,7 @@ class LoginScreenState extends State<LogInScreen> {
           await prefs.setString('userAddress', userData?['address'] ?? '');
           await prefs.setString('neighbourhoodId', userData?['neighbourhoodId'] ?? '');
           await prefs.setString('orgName', userData?['orgName'] ?? 'none');
+          await prefs.setString('orgId', userData?['orgId'] ?? '');
           await prefs.setStringList('services', userData?['services']?.cast<String>() ?? []);
 
           setState(() => _isLoading = false);
