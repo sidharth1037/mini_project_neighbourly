@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mini_ui/profile/changeservice.dart';
 import 'package:mini_ui/screens/auth_service.dart';
 import 'package:mini_ui/screens/screen_login.dart';
 import 'editprofile.dart' as edit;
@@ -14,9 +15,12 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> {
+
   static final _auth = AuthService();
   String _userName = "Loading..."; // Default until data loads
-
+  String userType = "";
+  String uid=""; // Default user type
+  Map<String, dynamic> allData={};
   @override
   void initState() {
     super.initState();
@@ -25,8 +29,18 @@ class ProfilePageState extends State<ProfilePage> {
 
   Future<void> _fetchUserData() async {
     final prefs = await SharedPreferences.getInstance();
+  
+  Map<String, dynamic> tempData = {}; // Temporary storage
+
+  for (String key in prefs.getKeys()) {
+    tempData[key] = prefs.get(key);
+  }
+
     setState(() {
-      _userName = prefs.getString('userName') ?? "User"; // Fallback if not found
+      _userName = prefs.getString('userName') ?? "User";
+      userType = prefs.getString('userType')??"";
+      uid = prefs.getString('userId')??""; 
+      allData=tempData;// Fallback if not found
     });
   }
 
@@ -97,7 +111,7 @@ class ProfilePageState extends State<ProfilePage> {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const edit.EditProfilePage()),
+                                      edit.EditProfilePage(userProfile: allData,)),
                             );
                           },
                           child: const Row(
@@ -166,16 +180,21 @@ class ProfilePageState extends State<ProfilePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Settings",
+                        const Text("Details",
                             style: Styles.settingsTitleStyle),
                         const SizedBox(height: 10),
                         Column(
                           children: [
-                            settingsButton("Notifications"),
+                            buildInfoContainer("Name",value: _userName),
                             const SizedBox(height: 10),
-                            settingsButton("Privacy"),
+                            buildInfoContainer("User Type",value: userType),
                             const SizedBox(height: 10),
-                            settingsButton("Account"),
+                            buildInfoContainer("E mail",value: allData["userEmail"]??""),
+                            const SizedBox(height: 10),
+                            buildInfoContainer("Address",value: allData["userAddress"]??""),
+                            const SizedBox(height: 10),
+                            userType=="volunteers"?buildInfoContainer("Services",services: allData["services"]??[]):Container(),
+
                           ],
                         ),
                       ],
@@ -184,6 +203,35 @@ class ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 20),
 
+                if (userType == "volunteers") ...{
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                    decoration: Styles.boxDecoration.copyWith(
+                      color: Styles.lightPurple,
+                    ),
+                    child: TextButton(
+                      onPressed: () async {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const ServicesProvided2()),
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Change Services",
+                              style: Styles.buttonTextStyle
+                                  .copyWith(fontSize: 16)),
+                          const Icon(Icons.change_circle, size: 26, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),},
+
+                const SizedBox(height: 20),
                   // Logout Section Box (Unchanged)
                   Container(
                     width: double.infinity,
@@ -215,6 +263,66 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
+  // Function to build info container dynamically
+Widget buildInfoContainer(String title, {String value = '', bool isRating = false, List<dynamic>? services}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+      decoration: BoxDecoration(
+        color: Styles.mildPurple,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: services == null
+            ? Wrap(
+              crossAxisAlignment: WrapCrossAlignment.start,
+              spacing: 10,
+              runSpacing: 5,
+              children: [
+              Text(
+                "$title ",
+                style: Styles.bodyStyle,
+              ),
+              if (isRating)
+                Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                  value,
+                  style: Styles.bodyStyle,
+                  ),
+                  const SizedBox(width: 5),
+                  Icon(
+                  Icons.star,
+                  color: Colors.yellow[500],
+                  size: 20,
+                  ),
+                ],
+                )
+              else
+                Text(
+                value,
+                style: Styles.bodyStyle,
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "$title ",
+                  style: Styles.bodyStyle,
+                ),
+                const SizedBox(height: 5),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: services.map((service) => Text("• $service", style: Styles.bodyStyle)).toList(),
+                ),
+              ],
+            ),
+    );
+  }
+
 
 // Function to Create Buttons (Unchanged)
 Widget settingsButton(String text) {
@@ -306,3 +414,4 @@ void showConfirmationDialog(BuildContext context) {
     },
   );
 }
+
