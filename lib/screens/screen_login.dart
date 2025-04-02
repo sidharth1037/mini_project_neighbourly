@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 // import 'package:mini_ui/navbar.dart';
 import 'package:mini_ui/screens/auth_service.dart';
+import 'package:mini_ui/screens/forgotpassword.dart';
 import 'package:mini_ui/splash.dart';
 import 'package:mini_ui/styles/styles.dart';
 import 'screen_signup.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
@@ -50,9 +49,13 @@ class LoginScreenState extends State<LogInScreen> {
       );
 
       if (user != null) {
-
         // Check each collection for the email
-        List<String> collections = ['homebound', 'volunteers', 'guardians', 'organization'];
+        List<String> collections = [
+          'homebound',
+          'volunteers',
+          'guardians',
+          'organization'
+        ];
         String? userType;
 
         for (String collection in collections) {
@@ -88,11 +91,14 @@ class LoginScreenState extends State<LogInScreen> {
           await prefs.setString('userName', userData?['name'] ?? '');
           await prefs.setString('userEmail', userData?['email'] ?? '');
           await prefs.setString('userAddress', userData?['address'] ?? '');
-          await prefs.setString('neighbourhoodId', userData?['neighbourhoodId'] ?? '');
+          await prefs.setString(
+              'neighbourhoodId', userData?['neighbourhoodId'] ?? '');
           await prefs.setString('orgName', userData?['orgName'] ?? 'none');
           await prefs.setString('orgId', userData?['orgId'] ?? '');
-          await prefs.setStringList('services', userData?['services']?.cast<String>() ?? []);
-
+          await prefs.setStringList(
+              'services', userData?['services']?.cast<String>() ?? []);
+          final amount = userData?['amount'] ?? 0; // Default to 0 if not found
+          await prefs.setInt('amount', amount);
           setState(() => _isLoading = false);
           _goToHome();
           return 'success';
@@ -158,13 +164,12 @@ class LoginScreenState extends State<LogInScreen> {
               ),
               const SizedBox(height: 20),
               Container(
-                
                 margin: const EdgeInsets.all(10.0),
                 padding: const EdgeInsets.all(16.0),
                 width: MediaQuery.of(context).size.width * 0.9,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
-                  color: Styles.mildPurple, 
+                  color: Styles.mildPurple,
                   boxShadow: const [
                     BoxShadow(
                       color: Color.fromARGB(66, 0, 0, 0),
@@ -253,44 +258,68 @@ class LoginScreenState extends State<LogInScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+
+                      const SizedBox(height: 25),
                       _isLoading
-                          ? const CircularProgressIndicator(
-                              color: Colors.white)
+                          ? const CircularProgressIndicator(color: Colors.white)
                           : ElevatedButton(
-                                onPressed: () async {
+                              onPressed: () async {
                                 final message = await _login();
                                 if (mounted) {
-                                    setState(() {
-                                      if( message != "success") {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                  setState(() {
+                                    if (message != "success") {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(content: Text(message)),
                                       );
-                                      }
-                                    });
-                                  }
-                                },
+                                    }
+                                  });
+                                }
+                              },
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 12.0, horizontal: 24.0),
-                                child: Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
+                                child: Text(
+                                  'Log In',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
+                                ),
                               ),
                             ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 5),
+                      Wrap(alignment: WrapAlignment.start, children: [
+                        TextButton(
+                          onPressed: () {
+                            //Navigate to Forgot Password screen or handle password reset logic
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ForgotPasswordScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(color: Colors.blue, fontSize: 16),
+                          ),
+                        ),
+                      ]),
+                      // Adjusted height
                       Wrap(
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           const Text("Don't have an account?",
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 16)),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16)),
                           TextButton(
                             onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SignUpScreen()),
+                                    builder: (context) => const SignUpScreen()),
                               );
                             },
                             child: const Text(

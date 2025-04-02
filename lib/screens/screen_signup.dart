@@ -63,17 +63,22 @@ class SignUpScreenState extends State<SignUpScreen> {
 
     try {
       // Check if the email already exists in any of the collections
-      final collections = ["homebounds", "volunteers", "guardians", "organizations"];
+      final collections = [
+        "homebounds",
+        "volunteers",
+        "guardians",
+        "organizations"
+      ];
       for (String collection in collections) {
         final querySnapshot = await FirebaseFirestore.instance
-        .collection(collection)
-        .where('email', isEqualTo: _emailController.text.trim())
-        .limit(1)
-        .get();
+            .collection(collection)
+            .where('email', isEqualTo: _emailController.text.trim())
+            .limit(1)
+            .get();
 
         if (querySnapshot.docs.isNotEmpty) {
           setState(() {
-        _isLoading = false;
+            _isLoading = false;
           });
           return "An account with this email already exists in $collection";
         }
@@ -113,6 +118,7 @@ class SignUpScreenState extends State<SignUpScreen> {
           "role": _selectedRole,
           "age": age,
           "createdAt": FieldValue.serverTimestamp(),
+          "amount": 0,
         };
 
         if (_selectedRole == "Homebound") {
@@ -256,15 +262,18 @@ class SignUpScreenState extends State<SignUpScreen> {
                                   String result = await _signUp();
                                   if (mounted) {
                                     setState(() {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(content: Text(result)),
                                       );
 
-                                      if( result == "Account created successfully! Please Log In.") {
+                                      if (result ==
+                                          "Account created successfully! Please Log In.") {
                                         Navigator.pushReplacement(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const LogInScreen(),
+                                            builder: (context) =>
+                                                const LogInScreen(),
                                           ),
                                         );
                                       }
@@ -274,7 +283,12 @@ class SignUpScreenState extends State<SignUpScreen> {
                                 child: const Padding(
                                   padding: EdgeInsets.symmetric(
                                       vertical: 12.0, horizontal: 24.0),
-                                  child: Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
+                                  child: Text(
+                                    'Sign Up',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600),
+                                  ),
                                 ),
                               ),
                         Wrap(
@@ -358,18 +372,19 @@ class SignUpScreenState extends State<SignUpScreen> {
           );
         }).toList(),
         onChanged: (value) => setState(() => _selectedGender = value!),
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white), // Set arrow color to white
+        icon: const Icon(Icons.arrow_drop_down,
+            color: Colors.white), // Set arrow color to white
         decoration: InputDecoration(
           labelText: "Gender",
           labelStyle: const TextStyle(color: Styles.white),
           prefixIcon: const Icon(Icons.person, color: Styles.white),
           enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: Colors.white, width: 1),
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: Colors.white, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: Colors.white, width: 1),
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: Colors.white, width: 1),
           ),
         ),
       ),

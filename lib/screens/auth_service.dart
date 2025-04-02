@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mini_ui/screens/screen_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Add this import for Firestore
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -47,5 +48,42 @@ class AuthService {
       context,
       MaterialPageRoute(builder: (context) => const LogInScreen()),
     );
+  }
+
+  Future<String> resetPassword(String email, BuildContext context) async {
+    try {
+      // Check if the email exists in any of the collections
+      final collections = [
+        "homebounds",
+        "volunteers",
+        "guardians",
+        "organizations"
+      ];
+      bool emailExists = false;
+
+      for (String collection in collections) {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection(collection)
+            .where('email', isEqualTo: email.trim())
+            .limit(1)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          emailExists = true;
+          break;
+        }
+      }
+
+      if (!emailExists) {
+        // Clear any existing SnackBars before showing a new one
+        return 'Email not found';
+      }
+
+      // Proceed with sending the password reset email
+      await _auth.sendPasswordResetEmail(email: email);
+      return 'Password reset email sent. Please check your inbox.';
+    } catch (e) {
+      return 'Failed to send password reset email. Please try again.';
+    }
   }
 }
