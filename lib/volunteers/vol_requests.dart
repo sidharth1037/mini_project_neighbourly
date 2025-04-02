@@ -122,7 +122,7 @@ class RequestsPageState extends State<VolRequestsPage> {
                                         padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
                                         child: Column(
                                           children: requests.map((request) {
-                                            return RequestBox(request: request);
+                                            return RequestBox(request: request, onRefresh: fetchAllRequests,);
                                           }).toList(),
                                         ),
                                       );
@@ -162,11 +162,13 @@ class RequestsPageState extends State<VolRequestsPage> {
 class RequestBox extends StatefulWidget {
   final Map<String, dynamic> request; // Request object containing all data
   final VoidCallback? onTap; // Callback for button press
+  final VoidCallback onRefresh;
 
   const RequestBox({
     super.key,
     required this.request,
     this.onTap, // Allows passing a function when tapped
+    required this.onRefresh,
   });
 
   @override
@@ -256,9 +258,20 @@ class _RequestBoxState extends State<RequestBox> {
     final String date = _formatDate(widget.request["date"]);
     final String status = widget.request["status"] ?? "Unknown";
     final String amount = "${widget.request["amount"] ?? "0.00"} ₹";
+    final String requestId = widget.request["id"] ?? "";
 
     return TextButton(
-      onPressed: () => _navigateToDetails(context),
+      onPressed: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReqDetailsPage(requestId: requestId),
+          ),
+        );
+        if (context.mounted) {
+          widget.onRefresh(); // Call the callback when returning
+        }
+      },
       child: Container(
         width: double.infinity,
         decoration: Styles.boxDecoration,
@@ -299,14 +312,14 @@ class _RequestBoxState extends State<RequestBox> {
     return "${parsedDate.day.toString().padLeft(2, '0')}-${parsedDate.month.toString().padLeft(2, '0')}-${parsedDate.year.toString().substring(2)}";
   }
 
-  void _navigateToDetails(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ReqDetailsPage(request: widget.request),
-      ),
-    );
-  }
+  // void _navigateToDetails(BuildContext context, String requestId) {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => ReqDetailsPage(requestId: requestId),
+  //     ),
+  //   );
+  // }
 
   Widget _buildTitle(String title) {
     return Text(

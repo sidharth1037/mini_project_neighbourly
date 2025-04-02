@@ -33,7 +33,7 @@ mixin Styles {
     fontWeight: FontWeight.bold,
   );
 
-  static final TextStyle bodyStyle = TextStyle(
+  static const TextStyle bodyStyle = TextStyle(
     fontSize: 18,
     color: Colors.white,
     fontWeight: FontWeight.w400,

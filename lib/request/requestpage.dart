@@ -56,9 +56,12 @@ class RequestsPageState extends State<RequestsPage> {
 
       if (mounted) {
         setState(() {
-          requests = querySnapshot.docs
-              .map((doc) => doc.data() as Map<String, dynamic>)
-              .toList();
+          requests = querySnapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            data['id'] = doc.id;
+            return data;
+          })
+          .toList();
 
           // Sort the requests by timestamp in descending order
           requests.sort((a, b) {
@@ -116,7 +119,7 @@ class RequestsPageState extends State<RequestsPage> {
                         : errorMessage == "success"
                             ? Column(
                                 children: requests.map((request) {
-                                  return RequestBox(request: request);
+                                  return RequestBox(request: request,onRefresh: fetchAllRequests,);
                                 }).toList(),
                               )
                             : Center(
@@ -208,12 +211,14 @@ class RequestsPageState extends State<RequestsPage> {
 
 class RequestBox extends StatelessWidget {
   final Map<String, dynamic> request; // Request object containing all data
-  final VoidCallback? onTap; // Callback for button press
+  final VoidCallback? onTap;
+  final VoidCallback onRefresh; // Callback for button press
 
   const RequestBox({
     super.key,
     required this.request,
-    this.onTap, // Allows passing a function when tapped
+    this.onTap,
+    required this.onRefresh, // Allows passing a function when tapped
   });
 
   @override
@@ -227,15 +232,19 @@ class RequestBox extends StatelessWidget {
         : "N/A";
     final String status = request["status"] ?? "Unknown";
     final String amount = "${request["amount"] ?? "0.00"} ₹";
+    final String requestId = request["id"] ?? "";
 
     return TextButton(
-      onPressed: () {
-        Navigator.push(
+      onPressed: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ReqDetailsPage(request: request), // Pass request to ReqDetailsPage
+            builder: (context) => ReqDetailsPage(requestId: requestId),
           ),
         );
+        if (context.mounted) {
+          onRefresh(); // Call the callback when returning
+        }
       }, // Trigger the callback when tapped
       child: Container(
         decoration: Styles.boxDecoration, // Use the same decoration as Profile Page

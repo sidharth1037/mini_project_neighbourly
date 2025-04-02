@@ -185,15 +185,15 @@ class ProfilePageState extends State<ProfilePage> {
                         const SizedBox(height: 10),
                         Column(
                           children: [
-                            buildInfoContainer("Name",value: _userName),
+                            buildInfoContainer("Name: ",value: _userName),
                             const SizedBox(height: 10),
-                            buildInfoContainer("User Type",value: userType),
+                            buildInfoContainer("User Type: ",value: userType),
                             const SizedBox(height: 10),
-                            buildInfoContainer("E mail",value: allData["userEmail"]??""),
+                            buildInfoContainer("E-mail: ",value: allData["userEmail"]??""),
                             const SizedBox(height: 10),
-                            buildInfoContainer("Address",value: allData["userAddress"]??""),
+                            buildInfoContainer("Address: ",value: allData["userAddress"]??""),
                             const SizedBox(height: 10),
-                            userType=="volunteers"?buildInfoContainer("Services",services: allData["services"]??[]):Container(),
+                            userType=="volunteers"?buildInfoContainer("Services:",services: allData["services"]??[]):Container(),
 
                           ],
                         ),
@@ -276,7 +276,6 @@ Widget buildInfoContainer(String title, {String value = '', bool isRating = fals
       child: services == null
             ? Wrap(
               crossAxisAlignment: WrapCrossAlignment.start,
-              spacing: 10,
               runSpacing: 5,
               children: [
               Text(

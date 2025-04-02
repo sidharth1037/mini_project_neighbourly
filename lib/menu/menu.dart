@@ -87,7 +87,7 @@ class Home extends StatelessWidget with CustomStyle {
                               ),
                             ),
                             minimumSize: Size(120, 110),
-                            maximumSize: Size(170, 150),
+                            maximumSize: Size(150, 140),
                           ),
                           child: Center(
                             child: Column(
