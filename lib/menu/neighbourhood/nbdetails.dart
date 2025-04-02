@@ -14,6 +14,41 @@ class ReqDetailsPage extends StatefulWidget {
 
 class _ReqDetailsPageState extends State<ReqDetailsPage> {
   bool _isLoading = false;
+  Future<void> joinNeighbourhood(String neighbourhoodId) async {
+    setState(() {
+      _isLoading = true;
+    });
+  final prefs = await SharedPreferences.getInstance();
+  final _userType = prefs.getString('userType') ?? ""; // Fallback if not found
+  print ("User Name: $_userType");
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("Error: User not logged in");
+      return;
+    }
+
+    DocumentReference userDocRef = FirebaseFirestore.instance.collection(_userType).doc(user.uid);
+
+    // Update the user document by adding the field
+    await userDocRef.set({'neighbourhoodId': neighbourhoodId}, SetOptions(merge: true));
+    await prefs.setString('neighbourhoodId', neighbourhoodId);
+    await FirebaseFirestore.instance
+        .collection('neighbourhood') // Change to your collection name
+        .doc(neighbourhoodId)
+        .update({
+          _userType: FieldValue.increment(1), // Increment by 1
+        });
+
+    print("Neighbourhood ID added successfully to $_userType");
+  } catch (e) {
+    print("Error joining neighborhood: $e");
+  }
+  setState(() {
+    _isLoading = false;
+  });
+}
+
 
   void showConfirmationDialog(BuildContext context1, String neighbourhoodId) {
     showDialog(
@@ -254,31 +289,3 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
 }
 
 // Function to add neighbourhood ID to the current user's collection
-Future<void> joinNeighbourhood(String neighbourhoodId) async {
-  final prefs = await SharedPreferences.getInstance();
-  final _userType = prefs.getString('userType') ?? "User"; // Fallback if not found
-  print ("User Name: $_userType");
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      print("Error: User not logged in");
-      return;
-    }
-
-    DocumentReference userDocRef = FirebaseFirestore.instance.collection(_userType).doc(user.uid);
-
-    // Update the user document by adding the field
-    await userDocRef.set({'neighbourhoodId': neighbourhoodId}, SetOptions(merge: true));
-    await prefs.setString('neighbourhoodId', neighbourhoodId);
-    await FirebaseFirestore.instance
-        .collection('neighbourhood') // Change to your collection name
-        .doc(neighbourhoodId)
-        .update({
-          _userType: FieldValue.increment(1), // Increment by 1
-        });
-
-    print("Neighbourhood ID added successfully");
-  } catch (e) {
-    print("Error joining neighborhood: $e");
-  }
-}

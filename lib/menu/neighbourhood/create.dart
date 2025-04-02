@@ -9,7 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> joinNeighbourhood(String neighbourhoodId) async {
   final prefs = await SharedPreferences.getInstance();
-  final userType = prefs.getString('userType') ?? "User"; // Fallback if not found
+  final userType = prefs.getString('userType') ?? ""; // Fallback if not found
   print ("User Name: $userType");
   try {
     final user = FirebaseAuth.instance.currentUser;
@@ -31,7 +31,7 @@ Future<void> joinNeighbourhood(String neighbourhoodId) async {
           userType: FieldValue.increment(1), // Increment by 1
         });
 
-    print("Neighbourhood ID added successfully");
+    print("Neighbourhood ID added successfully to $userType");
   } catch (e) {
     print("Error joining neighborhood: $e");
   }
