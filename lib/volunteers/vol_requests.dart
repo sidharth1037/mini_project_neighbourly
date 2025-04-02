@@ -47,39 +47,71 @@ class RequestsPageState extends State<VolRequestsPage> {
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      String? neighbourhoodId = prefs.getString('neighbourhoodId') ?? "";
-      List<String> selectedServices = prefs.getStringList('services') ?? [];
+        final prefs = await SharedPreferences.getInstance();
+  String? neighbourhoodId = prefs.getString('neighbourhoodId') ?? "";
+  List<String> selectedServices = prefs.getStringList('services') ?? [];
+  String? userId = prefs.getString('userId') ?? "";
+  // Fetch neighbourhood-matching requests
+  QuerySnapshot querySnapshot1 = await FirebaseFirestore.instance
+      .collection('current_requests')
+      .where('neighbourhood', isEqualTo: neighbourhoodId)
+      .get();
 
-      // Fetch documents matching the neighbourhood
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('current_requests')
-          .where('neighbourhood', isEqualTo: neighbourhoodId)
-          .get();
+  // Fetch priority list-matching requests
+  QuerySnapshot querySnapshot2 = await FirebaseFirestore.instance
+      .collection('current_requests')
+      .where('priority', arrayContains: userId)
+      .get();
 
-      final fetchedRequests = querySnapshot.docs
-          .where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return selectedServices.contains(data['requestType']);
-          })
-          .map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            data['id'] = doc.id;
-            return data;
-          })
-          .toList();
+  // Use a Set to track unique document IDs
+  Set<String> documentIds = {};
+  List<Map<String, dynamic>> fetchedRequests = [];
 
-      fetchedRequests.sort((a, b) {
-        final timestampA = a['timestamp'] ?? 0;
-        final timestampB = b['timestamp'] ?? 0;
-        return timestampB.compareTo(timestampA);
-      });
+  // Add documents from the first query
+  for (var doc in querySnapshot1.docs) {
+    if (documentIds.add(doc.id)) { // Ensures uniqueness
+      final data = doc.data() as Map<String, dynamic>;
+      data['id'] = doc.id;
+      fetchedRequests.add(data);
+    }
+  }
 
-      requestsNotifier.value = fetchedRequests;
-      errorMessageNotifier.value = fetchedRequests.isEmpty ? "No new requests." : "success";
-    } catch (e) {
-      errorMessageNotifier.value = "An error occurred. Try again later.";
-    } finally {
+  // Add documents from the second query (avoiding duplicates)
+  for (var doc in querySnapshot2.docs) {
+    if (documentIds.add(doc.id)) { // Ensures uniqueness
+      final data = doc.data() as Map<String, dynamic>;
+      data['id'] = doc.id;
+      fetchedRequests.add(data);
+    }
+  }
+
+  // fetchedRequests.where((doc) {
+  //   final data = doc.data() as Map<String, dynamic>;
+  //   return selectedServices.contains(data['requestType']);
+  // });
+
+  fetchedRequests = fetchedRequests
+    .where((doc) => selectedServices.contains(doc['requestType']))
+    .toList();
+
+
+  // Sort by timestamp (newest first)
+  fetchedRequests.sort((a, b) {
+    final timestampA = a['timestamp'] ?? 0;
+    final timestampB = b['timestamp'] ?? 0;
+    return timestampB.compareTo(timestampA);
+  });
+
+  // Update UI
+  requestsNotifier.value = fetchedRequests;
+  errorMessageNotifier.value = fetchedRequests.isEmpty ? "No new requests." : "success";
+} catch (e) {
+  errorMessageNotifier.value = "An error occurred. Try again later.";
+}
+
+
+
+    finally {
       isLoadingNotifier.value = false;
     }
   }

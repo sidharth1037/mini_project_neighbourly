@@ -42,45 +42,67 @@ class NewRequestPageState extends State<NewRequestPage> {
         return "Please fill all fields before submitting.";
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      String neighbourhoodId = prefs.getString('neighbourhoodId') ?? ""; // Fallback if not found
-
-
-      final requestData = {
-        "homeboundId": FirebaseAuth.instance.currentUser!.uid,
-        "volunteerId": "",
-        "requestType": selectedRequest,
-        "description": descriptionController.text,
-        "date": "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}",
-        "time": selectedTime.format(context),
-        "volunteerGender": selectedGender,
-        "requestAt": requestAt,
-        "neighbourhood": neighbourhoodId,
-        "amount": double.tryParse(amountController.text)?.toStringAsFixed(2) ?? "0.00",
-        "status": "Waiting",
-        "timestamp": FieldValue.serverTimestamp(),
-        "tags": [],
-      };
-
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) {
-        return "User not logged in.";
-      }
-      
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        return "No network connection. Try again later.";
-      }
-
       try {
-        await FirebaseFirestore.instance
-        .collection('current_requests')
-        .add(requestData);
+        DocumentSnapshot doc = await FirebaseFirestore.instance
+            .collection("homebound")
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .get();
+
+        List<String> volunteerIds = [];
+
+        if (doc.exists && doc.data() != null) {
+          var data = doc.data() as Map<String, dynamic>;
+          if (data.containsKey("volunteerId") && data["volunteerId"] is List) {
+            volunteerIds = List<String>.from(data["volunteerId"]);
+          }
+        }
+
+        final prefs = await SharedPreferences.getInstance();
+        String neighbourhoodId = prefs.getString('neighbourhoodId') ?? "";
+
+        // Create requestData dynamically based on requestAt
+        final requestData = {
+          "homeboundId": FirebaseAuth.instance.currentUser!.uid,
+          "volunteerId": "",
+          "requestType": selectedRequest,
+          "description": descriptionController.text,
+          "date": "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}",
+          "time": selectedTime.format(context),
+          "volunteerGender": selectedGender,
+          "requestAt": requestAt,
+          "amount": double.tryParse(amountController.text)?.toStringAsFixed(2) ?? "0.00",
+          "status": "Waiting",
+          "timestamp": FieldValue.serverTimestamp(),
+          "tags": [],
+        };
+
+        // Add "neighbourhood" only if requestAt contains "Neighbourhood"
+        if (requestAt == "Neighbourhood" || requestAt == "Neighbourhood & Priority List") {
+          requestData["neighbourhood"] = neighbourhoodId;
+        }
+
+        // Add "priority" only if requestAt contains "Priority List"
+        if (requestAt == "Priority List" || requestAt == "Neighbourhood & Priority List") {
+          requestData["priority"] = volunteerIds;
+        }
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          return "User not logged in.";
+        }
+
+        final connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult == ConnectivityResult.none) {
+          return "No network connection. Try again later.";
+        }
+
+        await FirebaseFirestore.instance.collection('current_requests').add(requestData);
         return "success";
       } catch (e) {
+        print("Error: $e"); // Debugging output
         return "An error occurred. Try again later.";
       }
+
     }
 
   showConfirmationDialog(
