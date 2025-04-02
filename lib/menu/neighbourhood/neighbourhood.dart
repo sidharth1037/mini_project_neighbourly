@@ -168,7 +168,7 @@ class _NeighbourhoodState extends State<Neighbourhood> {
                     RequestBox(
                             title: nhdetails['name'] ?? 'Unknown',
                             homebound: nhdetails['homebound']?.toString() ?? '0',
-                            volunteer: nhdetails['volunteer']?.toString() ?? '0',
+                            volunteer: nhdetails['volunteers']?.toString() ?? '0',
                             address: nhdetails['address'] ?? 'No Address',
                             areacode: nhdetails['zip'] ?? '00000',
                     ),
