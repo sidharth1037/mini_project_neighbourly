@@ -2,16 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../styles/styles.dart';
 
-class ReqDetailsPage extends StatefulWidget {
+class VolReqDetailsPage extends StatefulWidget {
   final String requestId;
 
-  const ReqDetailsPage({super.key, required this.requestId});
+  const VolReqDetailsPage({super.key, required this.requestId});
 
   @override
-  ReqDetailsPageState createState() => ReqDetailsPageState();
+  _VolReqDetailsPageState createState() => _VolReqDetailsPageState();
 }
 
-class ReqDetailsPageState extends State<ReqDetailsPage> {
+class _VolReqDetailsPageState extends State<VolReqDetailsPage> {
   Map<String, dynamic>? requestDetails;
   bool isLoading = true;
 

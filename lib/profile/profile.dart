@@ -189,7 +189,7 @@ class ProfilePageState extends State<ProfilePage> {
                             const SizedBox(height: 10),
                             buildInfoContainer("User Type: ",value: userType),
                             const SizedBox(height: 10),
-                            buildInfoContainer("E-mail: ",value: allData["userEmail"]??""),
+                            buildInfoContainer("Email: ",value: allData["userEmail"]??""),
                             const SizedBox(height: 10),
                             buildInfoContainer("Address: ",value: allData["userAddress"]??""),
                             const SizedBox(height: 10),

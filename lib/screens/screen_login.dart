@@ -264,6 +264,7 @@ class LoginScreenState extends State<LogInScreen> {
                           ? const CircularProgressIndicator(color: Colors.white)
                           : ElevatedButton(
                               onPressed: () async {
+                                FocusScope.of(context).unfocus();
                                 final message = await _login();
                                 if (mounted) {
                                   setState(() {

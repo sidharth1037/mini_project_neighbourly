@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_ui/organization/volunteer.dart';
+import 'package:mini_ui/request/rating.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../styles/styles.dart';
 
 class ReqDetailsPage extends StatefulWidget {
@@ -15,6 +17,7 @@ class ReqDetailsPage extends StatefulWidget {
 class _ReqDetailsPageState extends State<ReqDetailsPage> {
   Map<String, dynamic>? request;
   String status = "";
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -44,6 +47,224 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
         request = null; // Null signifies an error
       });
     }
+  }
+
+  Future<void> moveToHistory() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      // Reference to the current request document
+      DocumentReference requestDoc = FirebaseFirestore.instance
+          .collection("current_requests")
+          .doc(widget.requestId);
+
+      // Get the document data
+      DocumentSnapshot snapshot = await requestDoc.get();
+
+      if (snapshot.exists) {
+        // Get the request data and update the status
+        Map<String, dynamic> requestData = snapshot.data() as Map<String, dynamic>;
+        requestData["status"] = "Completed";
+
+        // Move the document to completed_requests with updated status
+        await FirebaseFirestore.instance
+            .collection("completed_requests")
+            .doc(snapshot.id)
+            .set(requestData);
+
+        // Delete the original document from current_requests
+        await requestDoc.delete();
+      }
+    } catch (e) {
+      print("Error moving request to history: $e");
+    }
+  }
+
+
+  void showPaymentDialog(BuildContext context,String amount,String volunteerId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        bool isLoading = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Styles.mildPurple,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text(
+                "Confirm Payment",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              content: isLoading
+                  ? const SizedBox(
+                          height: 80,
+                          width: 40,
+                          child: Center(
+                            child: Column(
+                              children: [
+                                SizedBox(height: 30,),
+                                CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                  : const Text(
+                      "Are you sure you want to pay the specified amount?",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+              actions: isLoading
+                  ? []
+                  : [
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                backgroundColor: Styles.lightPurple,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: () async {
+                                setState(() => isLoading = true);
+
+                                try {
+                                  int amountInt = double.parse(amount).toInt();
+
+                                  // Get userId from SharedPreferences
+                                  final prefs = await SharedPreferences.getInstance();
+                                  String? userId = prefs.getString("userId");
+
+                                  if (userId != null) {
+                                    // Reference to the user's document in Firestore
+                                    DocumentReference userDoc = FirebaseFirestore.instance.collection("homebound").doc(userId);
+
+                                    // Get the current amount from Firestore
+                                    DocumentSnapshot snapshot = await userDoc.get();
+                                    if (snapshot.exists) {
+                                      int currentAmount = (snapshot.get("amount") ?? 0).toInt();
+
+                                      // Calculate the new amount
+                                      int newAmount = currentAmount - amountInt;
+
+                                      // Update Firestore
+                                      await userDoc.update({"amount": newAmount});
+
+                                      // Update SharedPreferences
+                                      await prefs.setInt("amount", newAmount);
+                                    }
+
+                                    DocumentReference requestDoc = FirebaseFirestore.instance.collection("current_requests").doc(widget.requestId);
+
+                                    // Get the current amount from Firestore
+                                    DocumentSnapshot requestsnapshot = await userDoc.get();
+                                    if(requestsnapshot.exists) {
+                                      await requestDoc.update({"status": "Pending Rating"});
+                                    }
+                                    // Reference to the volunteer's document in Firestore (volunteers)
+                                    DocumentReference volunteerDoc = FirebaseFirestore.instance.collection("volunteers").doc(volunteerId);
+
+                                    // Get the current amount from Firestore for volunteer
+                                    DocumentSnapshot volunteerSnapshot = await volunteerDoc.get();
+                                    if (volunteerSnapshot.exists) {
+                                      int volunteerAmount = (volunteerSnapshot.get("amount") ?? 0).toInt();
+
+                                      // Calculate the new amount (adding instead of subtracting)
+                                      int updatedVolunteerAmount = volunteerAmount + amountInt;
+
+                                      // Update Firestore for volunteer
+                                      await volunteerDoc.update({"amount": updatedVolunteerAmount});
+                                    }
+                                  }
+                                //   await FirebaseFirestore.instance
+                                //       .collection("current_requests")
+                                //       .doc(widget.requestId)
+                                //       .delete();
+
+                                //   if(context.mounted) {
+                                //       Navigator.of(context).pop();
+                                //   }
+
+                                  if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        "Payment successfull.",
+                                      style: TextStyle(fontSize: 17),
+                                      ),
+                                      backgroundColor:Colors.green[400],
+                                      behavior: SnackBarBehavior.floating,
+                                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                      shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+                                    ),
+                                  );
+                                  // setState(() => isLoading = false);
+                                }
+                                } catch (e) {
+                                  setState(() => isLoading = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Error: ${e.toString()}"),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } finally {
+                                  fetchRequest(); // Refresh the request data
+                                }
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.green[400],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: Text(
+                                "Pay ₹ $amount",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void showConfirmationDialog(BuildContext context) {
@@ -132,7 +353,7 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                                     SnackBar(
                                       content: const Text(
                                         "Request cancelled successfully",
-                                      style: const TextStyle(fontSize: 17),
+                                      style: TextStyle(fontSize: 17),
                                       ),
                                       backgroundColor:Colors.green[400],
                                       behavior: SnackBarBehavior.floating,
@@ -207,7 +428,7 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                           ],
                         ),
                       ),
-                      request == null
+                      (request == null || isLoading)
                         ? const Center(
                             child: CircularProgressIndicator(color: Colors.white),
                           )
@@ -238,7 +459,7 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                                   : "N/A",
                             ),
                             const SizedBox(height: 10),
-                            buildInfoContainer("Amount:", value: "${request!["amount"]} ₹"),
+                            buildInfoContainer("Amount:", value: "₹ ${request!["amount"]}"),
                             const SizedBox(height: 10),
                             buildInfoContainer("Volunteer Preference:", value: request!["volunteerGender"]),
                             const SizedBox(height: 10),
@@ -246,7 +467,7 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                             const SizedBox(height: 10),
                             buildInfoContainer("Status: ", value: request!["status"], isStatus: true),
                             const SizedBox(height: 10),
-                            if (status == "Accepted") ...{
+                            if (status == "Accepted" || status == "Pending Rating") ...{
                               Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.fromLTRB(6, 4, 0, 4),
@@ -276,8 +497,9 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                             SizedBox(
                               width: double.infinity,
                               height: 56,
-                              child: status == "Waiting"
-                                ? TextButton(
+                              child: () {
+                                if (status == "Waiting") {
+                                  return TextButton(
                                     onPressed: () => showConfirmationDialog(context),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red[400],
@@ -301,13 +523,50 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                                         ),
                                       ],
                                     ),
-                                  )
-                                : TextButton(
-                                    onPressed: () {
-                                      // Implement the payment functionality here
-                                    },
+                                  );
+                                } else if (status == "Accepted") {
+                                  return TextButton(
+                                    onPressed: () => showPaymentDialog(context, request!["amount"], request!["volunteerId"]),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green[500],
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        side: const BorderSide(color: Styles.offWhite, width: 2),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.payment, color: Colors.white, size: 26),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          "Pay ₹ ${request!["amount"]}",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else if (status == "Pending Rating") {
+                                  return TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => RateVolunteerPage(volunteerId: request!["volunteerId"]),
+                                        ),
+                                      ).then((_) async {
+                                        await moveToHistory();
+                                        if (mounted) {
+                                          Navigator.pop(context);
+                                        }
+                                      });
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue[300],
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                         side: const BorderSide(color: Styles.offWhite, width: 2),
@@ -316,10 +575,10 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.payment, color: Colors.white, size: 26),
+                                        Icon(Icons.star, color: Colors.white, size: 26),
                                         SizedBox(width: 8),
                                         Text(
-                                          "Pay Amount",
+                                          "Rate Volunteer",
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 18,
@@ -328,7 +587,11 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                                         ),
                                       ],
                                     ),
-                                  ),
+                                  );
+                                } else {
+                                  return const SizedBox.shrink(); // Return an empty widget if no condition matches
+                                }
+                              }(),
                             ),
                           ],
                         ),
@@ -349,6 +612,9 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
     } else if (value == 'Waiting') {
       statusColor = Colors.yellow[500]!;
       statusText = "Waiting for volunteer";
+    } else if (value == 'Pending Rating') {
+      statusColor = Colors.blue[300]!;
+      statusText = "Request & Payment completed";
     }
 
     return Container(
