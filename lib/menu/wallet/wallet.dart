@@ -1,40 +1,259 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'details.dart';
 import 'package:flutter/material.dart';
 
-import '../../styles/styles.dart'; 
+import '../../styles/styles.dart';
 import '../../styles/custom_style.dart';
 
-
-class Wallet extends StatelessWidget with CustomStyle {
+class Wallet extends StatefulWidget with CustomStyle {
   Wallet({super.key});
 
   @override
+  _WalletState createState() => _WalletState();
+}
+
+class _WalletState extends State<Wallet> {
+  int _currentAmount = 0;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAmount();
+  }
+
+  Future<void> _loadAmount() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentAmount = prefs.getInt('amount') ?? 0;
+    });
+  }
+
+  Future<void> _incrementAmount(int amountToAdd) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    final userType = prefs.getString('userType');
+
+    if (userId != null && userType != null) {
+      if (_currentAmount + amountToAdd <= 10000) {
+        _currentAmount += amountToAdd;
+
+        await FirebaseFirestore.instance
+            .collection(userType)
+            .doc(userId)
+            .update({'amount': _currentAmount});
+
+        await prefs.setInt('amount', _currentAmount);
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Rupees $amountToAdd Credited')),
+        );
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot exceed the limit of 10,000')),
+        );
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Failed to update amount. Please try again.')),
+      );
+    }
+  }
+
+  Future<void> _decrementAmount(int amountToWithdraw) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    final userType = prefs.getString('userType');
+
+    if (userId != null && userType != null) {
+      if (_currentAmount >= amountToWithdraw) {
+        _currentAmount -= amountToWithdraw;
+
+        await FirebaseFirestore.instance
+            .collection(userType)
+            .doc(userId)
+            .update({'amount': _currentAmount});
+
+        await prefs.setInt('amount', _currentAmount);
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Rupees $amountToWithdraw Withdrawn')),
+        );
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Insufficient balance')),
+        );
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Failed to update amount. Please try again.')),
+      );
+    }
+  }
+
+  void _showTopUpDialog() {
+    final TextEditingController _amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Top Up Amount'),
+          content: TextField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'Enter amount to add',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final amountToAdd = int.tryParse(_amountController.text) ?? 0;
+                if (amountToAdd > 0) {
+                  Navigator.pop(context); // Close the dialog
+                  await _incrementAmount(amountToAdd);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Enter a valid amount')),
+                  );
+                }
+              },
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Top Up'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showWithdrawDialog() {
+    final TextEditingController _amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Withdraw Amount'),
+          content: TextField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'Enter amount to withdraw',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final amountToWithdraw =
+                    int.tryParse(_amountController.text) ?? 0;
+                if (amountToWithdraw > 0) {
+                  Navigator.pop(context); // Close the dialog
+                  await _decrementAmount(amountToWithdraw);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Enter a valid amount')),
+                  );
+                }
+              },
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Withdraw'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-      return Scaffold(
-        body: DecoratedBox(
-          decoration: BoxDecoration(color: Styles.darkPurple),
+    return Scaffold(
+      resizeToAvoidBottomInset:
+          true, // Ensures the layout adjusts when the keyboard appears
+      body: Container(
+        height: MediaQuery.of(context).size.height, // Full height
+        decoration: BoxDecoration(color: Styles.darkPurple),
+        child: SingleChildScrollView(
           child: Column(
             children: [
               SizedBox(
-              height: MediaQuery.of(context).size.height * 0.33,
-              child: Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text("E-Wallet", style: Styles.titleStyle),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    child: BackButton(
-                      color: Styles.white,
-                      onPressed: () => Navigator.pop(context),
+                height: MediaQuery.of(context).size.height * 0.33,
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text("Wallet", style: Styles.titleStyle),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 20,
+                      left: 20,
+                      child: BackButton(
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -43,9 +262,7 @@ class Wallet extends StatelessWidget with CustomStyle {
                     child: PageView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _buildCard("€ 6,815.53", "7995"),
-                        _buildCard("€ 3,420.00", "1234"),
-                        _buildCard("€ 1,250.75", "5678"),
+                        _buildCard("€ $_currentAmount"),
                       ],
                     ),
                   ),
@@ -53,9 +270,18 @@ class Wallet extends StatelessWidget with CustomStyle {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                     _buildActionButton(Icons.add, "Top up", context, CardListScreen()),
-                      _buildActionButton(Icons.sync_alt, "Exchange", context, CardListScreen()),
-                      _buildActionButton(Icons.info, "Details", context, CardListScreen()),
+                      _buildActionButton(
+                        Icons.add,
+                        "Top up",
+                        context,
+                        _showTopUpDialog,
+                      ),
+                      _buildActionButton(
+                        Icons.remove, // Changed icon for Withdraw
+                        "Withdraw",
+                        context,
+                        _showWithdrawDialog,
+                      ),
                     ],
                   ),
                 ],
@@ -63,17 +289,19 @@ class Wallet extends StatelessWidget with CustomStyle {
             ],
           ),
         ),
-      );
-    } 
+      ),
+    );
   }
 
-  Widget _buildCard(String balance, String lastDigits) {
+  Widget _buildCard(String balance) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 30),
       decoration: BoxDecoration(
         color: Styles.lightPurple,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 5))
+        ],
       ),
       child: Center(
         child: Column(
@@ -81,28 +309,21 @@ class Wallet extends StatelessWidget with CustomStyle {
           children: [
             Text(
               balance,
-              style: Styles.buttonTextStyle.copyWith(color: Colors.white, fontSize: 24),
+              style: Styles.buttonTextStyle
+                  .copyWith(color: Colors.white, fontSize: 24),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 10),
-            Text(
-              "**** $lastDigits",
-              style: Styles.buttonTextStyle.copyWith(color: Colors.white, fontSize: 18),
-            ),
           ],
         ),
       ),
     );
   }
 
-   Widget _buildActionButton(IconData icon, String label, BuildContext context, Widget page) {
+  Widget _buildActionButton(
+      IconData icon, String label, BuildContext context, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => page),
-        );
-      },
+      onTap: onTap,
       child: Column(
         children: [
           CircleAvatar(
@@ -111,9 +332,11 @@ class Wallet extends StatelessWidget with CustomStyle {
             child: Icon(icon, color: Colors.white, size: 28),
           ),
           SizedBox(height: 10),
-          Text(label, style: Styles.buttonTextStyle.copyWith(color: Colors.white, fontSize: 14)),
+          Text(label,
+              style: Styles.buttonTextStyle
+                  .copyWith(color: Colors.white, fontSize: 14)),
         ],
       ),
     );
   }
-
+}
