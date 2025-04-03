@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mini_ui/organization/reqhistory/reqhistory.dart';
 import '../../../styles/styles.dart';
 
 class VolunteerDetailsPage extends StatefulWidget {
@@ -160,37 +161,43 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
                   const SizedBox(height: 14),
 
                   // Cancel Request Button
-                  // SizedBox(
-                  //   width: double.infinity,
-                  //   height: 56,
-                  //   child: TextButton(
-                  //     onPressed: () {
-                  //       showConfirmationDialog(context);
-                  //     },
-                  //     style: ElevatedButton.styleFrom(
-                  //       backgroundColor: Colors.red[500],
-                  //       shape: RoundedRectangleBorder(
-                  //         borderRadius: BorderRadius.circular(20),
-                  //         side: const BorderSide(color: Styles.offWhite, width: 2),
-                  //       ),
-                  //     ),
-                  //     child: const Row(
-                  //       mainAxisSize: MainAxisSize.min,
-                  //       children: [
-                  //         Icon(Icons.cancel, color: Colors.white, size: 26),
-                  //         SizedBox(width: 8),
-                  //         Text(
-                  //           "Remove Volunteer",
-                  //           style: TextStyle(
-                  //             color: Colors.white,
-                  //             fontSize: 18,
-                  //             fontWeight: FontWeight.bold,
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: TextButton(
+                      onPressed: () {
+                        print(volunteerDetails["uid"]);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OrgVolReqHistoryPage(volunteerId: volunteerDetails["uid"] ?? ""),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[500],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: const BorderSide(color: Styles.offWhite, width: 2),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.history, color: Colors.white, size: 26),
+                          SizedBox(width: 8),
+                          Text(
+                            "Volunteer History",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
