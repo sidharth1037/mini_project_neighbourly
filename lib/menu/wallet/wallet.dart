@@ -25,10 +25,19 @@ class _WalletState extends State<Wallet> {
   }
 
   Future<void> _loadAmount() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _currentAmount = prefs.getInt('amount') ?? 0;
-    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() {
+          _currentAmount = prefs.getInt('amount') ?? 0;
+        });
+      }
+    } catch (e) {
+      print('Error loading amount: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load wallet amount.')),
+      );
+    }
   }
 
   Future<void> _incrementAmount(int amountToAdd) async {
@@ -36,41 +45,51 @@ class _WalletState extends State<Wallet> {
       _isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
-    final userType = prefs.getString('userType');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+      final userType = prefs.getString('userType');
 
-    if (userId != null && userType != null) {
-      if (_currentAmount + amountToAdd <= 10000) {
-        _currentAmount += amountToAdd;
+      if (userId != null && userType != null) {
+        if (_currentAmount + amountToAdd <= 10000) {
+          _currentAmount += amountToAdd;
 
-        await FirebaseFirestore.instance
-            .collection(userType)
-            .doc(userId)
-            .update({'amount': _currentAmount});
+          try {
+            await FirebaseFirestore.instance
+                .collection(userType)
+                .doc(userId)
+                .update({'amount': _currentAmount});
+          } catch (e) {
+            print('Error updating Firestore: $e');
+            throw Exception('Failed to update Firestore.');
+          }
 
-        await prefs.setInt('amount', _currentAmount);
+          await prefs.setInt('amount', _currentAmount);
 
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Rupees $amountToAdd Credited')),
+          );
+        } else {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot exceed the limit of 10,000')),
+          );
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Rupees $amountToAdd Credited')),
-        );
       } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot exceed the limit of 10,000')),
-        );
+        throw Exception('User ID or User Type is null');
       }
-    } else {
+    } catch (e) {
+      print('Error incrementing amount: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -88,41 +107,51 @@ class _WalletState extends State<Wallet> {
       _isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
-    final userType = prefs.getString('userType');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+      final userType = prefs.getString('userType');
 
-    if (userId != null && userType != null) {
-      if (_currentAmount >= amountToWithdraw) {
-        _currentAmount -= amountToWithdraw;
+      if (userId != null && userType != null) {
+        if (_currentAmount >= amountToWithdraw) {
+          _currentAmount -= amountToWithdraw;
 
-        await FirebaseFirestore.instance
-            .collection(userType)
-            .doc(userId)
-            .update({'amount': _currentAmount});
+          try {
+            await FirebaseFirestore.instance
+                .collection(userType)
+                .doc(userId)
+                .update({'amount': _currentAmount});
+          } catch (e) {
+            print('Error updating Firestore: $e');
+            throw Exception('Failed to update Firestore.');
+          }
 
-        await prefs.setInt('amount', _currentAmount);
+          await prefs.setInt('amount', _currentAmount);
 
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Rupees $amountToWithdraw Withdrawn')),
+          );
+        } else {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Insufficient balance')),
+          );
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Rupees $amountToWithdraw Withdrawn')),
-        );
       } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Insufficient balance')),
-        );
+        throw Exception('User ID or User Type is null');
       }
-    } else {
+    } catch (e) {
+      print('Error decrementing amount: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
