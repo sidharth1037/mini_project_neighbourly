@@ -47,6 +47,11 @@ class Volremove extends StatelessWidget {
                   buildInfoContainer(
                       "Gender:", requestDetails["gender"] ?? "N/A"),
                   buildInfoContainer(
+                    "Rating:",
+                    requestDetails["rating"]?.toString() ?? "N/A",
+                  ),
+
+                  buildInfoContainer(
                       "Address:", requestDetails["address"] ?? "N/A"),
                   buildRemoveButton(context, requestDetails),
                 ],

@@ -63,7 +63,7 @@ class _PriorityPageState extends State<PriorityPage> {
             "name": data['name'] ?? 'Unknown',
             "age": data['age']?.toString() ?? 'N/A',
             "gender": data['gender'] ?? 'N/A',
-            "rating": "4.0", // Dummy rating
+            "rating": data['rating']?.toString()??'N/A', // Dummy rating
             "address": data['address'] ?? 'Address not available',
             "volunteerId":
                 volunteerDoc.id, // Use the volunteer ID from the document

@@ -96,7 +96,7 @@ class VolDetails extends StatelessWidget {
                   const SizedBox(height: 10),
                   buildInfoContainer(
                     "Rating:",
-                    value: '4.8', // Assuming this is hardcoded
+                    value: requestDetails["rating"]?.toString() ?? "N/A",
                   ),
                   const SizedBox(height: 10),
                   // Amount
@@ -111,15 +111,8 @@ class VolDetails extends StatelessWidget {
                     value: '55', // Assuming this is hardcoded
                   ),
                   const SizedBox(height: 10),
-                  buildInfoContainer(
-                    "Neighbourhood:",
-                    value: 'Dummy', // Assuming this is hardcoded
-                  ),
-                  const SizedBox(height: 10),
-                  buildInfoContainer(
-                    "Services Provided:",
-                    value: 'Services', // Assuming this is hardcoded
-                  ),
+                  buildInfoContainer("Services:",
+                      value: 'Services'),
                   const SizedBox(height: 14),
                   // Join Neighbourhood Button
                   SizedBox(
@@ -332,3 +325,61 @@ Future<void> addVolunteers(String volunteerId) async {
     Future.delayed(Duration(seconds: 5), () => addVolunteers(volunteerId));
   }
 }
+
+
+// Widget buildInfoContainer(String title, {String value = '', bool isRating = false, List<dynamic>? services}) {
+//     return Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+//       decoration: BoxDecoration(
+//         color: Styles.mildPurple,
+//         borderRadius: BorderRadius.circular(20),
+//       ),
+//       child: services == null
+//             ? Wrap(
+//               crossAxisAlignment: WrapCrossAlignment.start,
+//               runSpacing: 5,
+//               children: [
+//               Text(
+//                 "$title ",
+//                 style: Styles.bodyStyle,
+//               ),
+//               if (isRating)
+//                 Row(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   Text(
+//                   value,
+//                   style: Styles.bodyStyle,
+//                   ),
+//                   const SizedBox(width: 5),
+//                   Icon(
+//                   Icons.star,
+//                   color: Colors.yellow[500],
+//                   size: 20,
+//                   ),
+//                 ],
+//                 )
+//               else
+//                 Text(
+//                 value,
+//                 style: Styles.bodyStyle,
+//                 ),
+//               ],
+//             )
+//           : Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Text(
+//                   "$title ",
+//                   style: Styles.bodyStyle,
+//                 ),
+//                 const SizedBox(height: 5),
+//                 Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: services.map((service) => Text("• $service", style: Styles.bodyStyle)).toList(),
+//                 ),
+//               ],
+//             ),
+//     );
+//   }
