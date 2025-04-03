@@ -4,14 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../styles/styles.dart';
 import 'reqdetails.dart';
 
-class ReqHistoryPage extends StatefulWidget {
-  const ReqHistoryPage({super.key});
+class VolReqHistoryPage extends StatefulWidget {
+  const VolReqHistoryPage({super.key});
 
   @override
-  ReqHistoryPageState createState() => ReqHistoryPageState();
+  VolReqHistoryPageState createState() => VolReqHistoryPageState();
 }
 
-class ReqHistoryPageState extends State<ReqHistoryPage> {
+class VolReqHistoryPageState extends State<VolReqHistoryPage> {
   List<DocumentSnapshot> requests = [];
   bool isLoading = true;
   String? userId;
@@ -33,7 +33,7 @@ class ReqHistoryPageState extends State<ReqHistoryPage> {
 
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection("completed_requests")
-        .where("homeboundId", isEqualTo: userId)
+        .where("volunteerId", isEqualTo: userId)
         .get();
 
     setState(() {
@@ -78,10 +78,12 @@ class ReqHistoryPageState extends State<ReqHistoryPage> {
                     child: CircularProgressIndicator(color: Colors.white),
                   )
                 : requests.isEmpty
-                    ? const Text(
+                    ? const Center(
+                        child: Text(
                           "No completed requests found.",
                           style: TextStyle(color: Colors.white, fontSize: 16),
-                        )
+                        ),
+                      )
                     : Padding(
                         padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                         child: ListView.builder(
@@ -96,7 +98,7 @@ class ReqHistoryPageState extends State<ReqHistoryPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ReqDetailsPage(requestId: request.id),
+                                    builder: (context) => VolReqDetailsPage(requestId: request.id),
                                   ),
                                 );
                               },

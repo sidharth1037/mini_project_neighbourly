@@ -94,6 +94,12 @@ class RequestsPageState extends State<VolRequestsPage> {
     .where((doc) => selectedServices.contains(doc['requestType']))
     .toList();
 
+  fetchedRequests = fetchedRequests
+    .where((doc) => selectedServices.contains(doc['requestType']) &&
+                    (doc['volunteerId'] == "" || doc['volunteerId'] == userId))
+    .toList();
+
+
 
   // Sort by timestamp (newest first)
   fetchedRequests.sort((a, b) {
@@ -323,7 +329,12 @@ class _RequestBoxState extends State<RequestBox> {
                   _buildPillsRow([
                     "Amount: $amount",
                     status,
-                  ], statusColor: status == "Accepted" ? Colors.green[500]! : Colors.orange[600]!),
+                  ], statusColor: status == "Accepted" 
+                      ? Colors.green[500]! 
+                      : status == "Pending Rating" 
+                          ? Colors.blue[300]! 
+                          : Colors.orange[600]!,
+                  ),
                   const SizedBox(height: 4),
                   const Divider(color: Colors.white, thickness: 1),
                   _buildTagsSection(),

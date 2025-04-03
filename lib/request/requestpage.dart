@@ -276,7 +276,11 @@ class RequestBox extends StatelessWidget {
                     runSpacing: 5, // Space between wrapped rows
                     children: [
                       Styles.buildPill("Amount: $amount", Styles.mildPurple),
-                      Styles.buildPill(status, status == "Accepted" ? Colors.green[500]! : Colors.orange[600]!),
+                      Styles.buildPill(status, status == "Accepted" 
+                        ? Colors.green[500]! 
+                        : status == "Pending Rating" 
+                            ? Colors.blue[300]! 
+                            : Colors.orange[600]!,),
                     ],
                   ),
                 ],

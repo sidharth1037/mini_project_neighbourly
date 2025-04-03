@@ -1,18 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../styles/styles.dart';
 import '../../styles/custom_style.dart';
 
-class Wallet extends StatefulWidget with CustomStyle {
-  Wallet({super.key});
+class VolWallet extends StatefulWidget with CustomStyle {
+  VolWallet({super.key});
 
   @override
-  WalletState createState() => WalletState();
+  _VolWalletState createState() => _VolWalletState();
 }
 
-class WalletState extends State<Wallet> {
+class _VolWalletState extends State<VolWallet> {
   int _currentAmount = 0;
   bool _isLoading = false;
 
@@ -31,6 +32,7 @@ class WalletState extends State<Wallet> {
         });
       }
     } catch (e) {
+      print('Error loading amount: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load wallet amount.')),
       );
@@ -86,6 +88,7 @@ class WalletState extends State<Wallet> {
         throw Exception('User ID or User Type is null');
       }
     } catch (e) {
+      print('Error incrementing amount: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -118,6 +121,7 @@ class WalletState extends State<Wallet> {
                 .doc(userId)
                 .update({'amount': _currentAmount});
           } catch (e) {
+            print('Error updating Firestore: $e');
             throw Exception('Failed to update Firestore.');
           }
 
@@ -146,6 +150,7 @@ class WalletState extends State<Wallet> {
         throw Exception('User ID or User Type is null');
       }
     } catch (e) {
+      print('Error decrementing amount: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -159,7 +164,7 @@ class WalletState extends State<Wallet> {
   }
 
   void _showTopUpDialog() {
-    final TextEditingController amountController = TextEditingController();
+    final TextEditingController _amountController = TextEditingController();
 
     showDialog(
       context: context,
@@ -167,7 +172,7 @@ class WalletState extends State<Wallet> {
         return AlertDialog(
           title: const Text('Top Up Amount'),
           content: TextField(
-            controller: amountController,
+            controller: _amountController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               hintText: 'Enter amount to add',
@@ -182,7 +187,7 @@ class WalletState extends State<Wallet> {
             ),
             TextButton(
               onPressed: () async {
-                final amountToAdd = int.tryParse(amountController.text) ?? 0;
+                final amountToAdd = int.tryParse(_amountController.text) ?? 0;
                 if (amountToAdd > 0) {
                   Navigator.pop(context); // Close the dialog
                   await _incrementAmount(amountToAdd);
@@ -203,7 +208,7 @@ class WalletState extends State<Wallet> {
   }
 
   void _showWithdrawDialog() {
-    final TextEditingController amountController = TextEditingController();
+    final TextEditingController _amountController = TextEditingController();
 
     showDialog(
       context: context,
@@ -211,7 +216,7 @@ class WalletState extends State<Wallet> {
         return AlertDialog(
           title: const Text('Withdraw Amount'),
           content: TextField(
-            controller: amountController,
+            controller: _amountController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               hintText: 'Enter amount to withdraw',
@@ -229,7 +234,7 @@ class WalletState extends State<Wallet> {
               onPressed: () async {
                 FocusScope.of(context).unfocus();
                 final amountToWithdraw =
-                    int.tryParse(amountController.text) ?? 0;
+                    int.tryParse(_amountController.text) ?? 0;
                 if (amountToWithdraw > 0) {
                   Navigator.pop(context); // Close the dialog
                   await _decrementAmount(amountToWithdraw);
@@ -256,7 +261,7 @@ class WalletState extends State<Wallet> {
           true, // Ensures the layout adjusts when the keyboard appears
       body: Container(
         height: MediaQuery.of(context).size.height, // Full height
-        decoration: const BoxDecoration(color: Styles.darkPurple),
+        decoration: BoxDecoration(color: Styles.darkPurple),
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -264,9 +269,9 @@ class WalletState extends State<Wallet> {
                 height: MediaQuery.of(context).size.height * 0.33,
                 child: Stack(
                   children: [
-                    const Align(
+                    Align(
                       alignment: Alignment.center,
-                      child: Text("Wallet", style: Styles.titleStyle),
+                      child: Text("VolWallet", style: Styles.titleStyle),
                     ),
                     Positioned(
                       bottom: 20,
@@ -291,23 +296,14 @@ class WalletState extends State<Wallet> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildActionButton(
-                        Icons.add,
-                        "Top up",
-                        context,
-                        _showTopUpDialog,
-                      ),
-                      _buildActionButton(
-                        Icons.reply, // Changed icon for Withdraw
-                        "Withdraw",
-                        context,
-                        _showWithdrawDialog,
-                      ),
-                    ],
+                  SizedBox(height: 30),
+                  Center(
+                    child: _buildActionButton(
+                      Icons.reply, // Changed icon for Withdraw
+                      "Withdraw",
+                      context,
+                      _showWithdrawDialog,
+                                      ),
                   ),
                 ],
               ),
@@ -320,12 +316,12 @@ class WalletState extends State<Wallet> {
 
   Widget _buildCard(String balance) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 30),
+      margin: EdgeInsets.symmetric(horizontal: 30),
       decoration: BoxDecoration(
         color: Styles.lightPurple,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-           BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 5))
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 5))
         ],
       ),
       child: Center(
@@ -338,7 +334,7 @@ class WalletState extends State<Wallet> {
                   .copyWith(color: Colors.white, fontSize: 24),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
           ],
         ),
       ),
@@ -356,7 +352,7 @@ class WalletState extends State<Wallet> {
             radius: 30,
             child: Icon(icon, color: Colors.white, size: 28),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(label,
               style: Styles.buttonTextStyle
                   .copyWith(color: Colors.white, fontSize: 14)),

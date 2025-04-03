@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Required for SystemNavigator.pop()
 import 'package:mini_ui/menu/organization/navigation.dart';
+import 'package:mini_ui/volunteers/reqhistory/reqhistory.dart';
+import 'package:mini_ui/volunteers/volwallet.dart';
 import 'profile/profile.dart';
 import 'request/requestpage.dart';
 import 'styles/styles.dart';
@@ -23,11 +25,11 @@ List<Map<String, dynamic>> contentsHomebound=[
   ];
 
 List<Map<String, dynamic>> contentsVolunteer=[
-        {"icon":Icons.history,"label":"Request\nHistory","Navigation": const ReqHistoryPage()},
+        {"icon":Icons.history,"label":"Request\nHistory","Navigation": const VolReqHistoryPage()},
         {"icon":Icons.location_city,"label":"Neighbourhood","Navigation":Neighbourhood()},
         {"icon":Icons.group,"label":"Organization","Navigation": const OrganizationNavigation()},
         {"icon":Icons.support_agent,"label":"Customer\nCare","Navigation": const CustomerSupport()},
-        {"icon":Icons.wallet,"label":"Wallet","Navigation":Wallet()}
+        {"icon":Icons.wallet,"label":"Wallet","Navigation":VolWallet()}
   ];
 
 class MainScreen extends StatefulWidget {

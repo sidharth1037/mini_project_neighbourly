@@ -332,6 +332,9 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
     } else if (value == 'Waiting') {
       statusColor = Colors.yellow[500]!;
       statusText = "Waiting for volunteer";
+    } else if (value == 'Pending Rating') {
+      statusColor = Colors.blue[300]!;
+      statusText = "Payment Completed. Waiting for Rating.";
     }
 
     return Container(
