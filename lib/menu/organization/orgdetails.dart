@@ -17,6 +17,32 @@ class OrgDetailsPage extends StatefulWidget {
 class _OrgDetailsPageState extends State<OrgDetailsPage> {
   bool _isLoading = false;
 
+void removeField() async {
+  setState(() => _isLoading = true);
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    String userType = prefs.getString('userType') ?? '';
+    String userId = prefs.getString('userId') ?? '';
+
+    if (userId.isEmpty || userType.isEmpty) {
+      throw Exception("User data missing!");
+    }
+
+    await prefs.remove('orgId');
+    await FirebaseFirestore.instance.collection(userType).doc(userId).update({
+      'orgId': FieldValue.delete(),
+    });
+
+    print('Field removed successfully');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("You have left the organization!")),
+                          );
+                        Navigator.pop(context);
+  } catch (e) {
+    print("Error removing field: $e");
+  } 
+}
+
 
   void showConfirmationDialog(BuildContext context1, String orgId) {
     showDialog(
@@ -211,6 +237,15 @@ class _OrgDetailsPageState extends State<OrgDetailsPage> {
       ),
     );}
     else{
+      if(_isLoading
+      ==true){  return const Scaffold(
+        backgroundColor: Styles.darkPurple,
+        body: Center(
+          child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),),
+        ),
+      );
+      }
+      else{
            return Scaffold(
         body: DecoratedBox(
           decoration: BoxDecoration(color: Styles.darkPurple),
@@ -257,11 +292,38 @@ class _OrgDetailsPageState extends State<OrgDetailsPage> {
                   ],
                 ),
               ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+              Center(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  height: MediaQuery.of(context).size.height * 0.07,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Leave neighbourhood action
+                      removeField();
+
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Styles.lightPurple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      "Leave Organization",
+                      textAlign: TextAlign.center,
+                      style: Styles.buttonTextStyle.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+
             ]
           )
         )
      );
-    }
+    }}
   }
 
   // Function to build info container dynamically
