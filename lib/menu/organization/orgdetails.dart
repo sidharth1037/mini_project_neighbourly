@@ -295,7 +295,7 @@ void removeField() async {
               SizedBox(height: MediaQuery.of(context).size.height * 0.1),
               Center(
                 child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.5,
+                  width: MediaQuery.of(context).size.width * 0.9,
                   height: MediaQuery.of(context).size.height * 0.07,
                   child: ElevatedButton(
                     onPressed: () {
@@ -304,11 +304,15 @@ void removeField() async {
 
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Styles.lightPurple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        backgroundColor: Styles.mildPurple,
+                        elevation: 10, // Increased elevation for a stronger shadow
+                        shadowColor: Colors.black, // Darker and more visible shadow
+                        padding: const EdgeInsets.symmetric(vertical: 8), // Removed horizontal padding to fit width
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Color.fromARGB(255, 209, 209, 209), width: 2),
+                        ),
                       ),
-                    ),
                     child: Text(
                       "Leave Organization",
                       textAlign: TextAlign.center,

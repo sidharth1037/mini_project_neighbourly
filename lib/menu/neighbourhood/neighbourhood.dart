@@ -178,7 +178,7 @@ class _NeighbourhoodState extends State<Neighbourhood> {
               SizedBox(height: deviceHeight * 0.1),
               Center(
                 child: SizedBox(
-                  width: deviceWidth * 0.5,
+                  width: deviceWidth * 0.9,
                   height: deviceHeight * 0.07,
                   child: ElevatedButton(
                     onPressed: () {
@@ -189,11 +189,15 @@ class _NeighbourhoodState extends State<Neighbourhood> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Styles.lightPurple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        backgroundColor: Styles.mildPurple,
+                        elevation: 10, // Increased elevation for a stronger shadow
+                        shadowColor: Colors.black, // Darker and more visible shadow
+                        padding: const EdgeInsets.symmetric(vertical: 8), // Removed horizontal padding to fit width
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Color.fromARGB(255, 209, 209, 209), width: 2),
+                        ),
                       ),
-                    ),
                     child: Text(
                       "Leave Neighbourhood",
                       textAlign: TextAlign.center,
@@ -250,7 +254,10 @@ class RequestBox extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.all(10),
                   child: 
-                    Text(title, style: Styles.nameStyle,),
+                    Text(title, style: Styles.bodyStyle.copyWith(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                    ),),
                   
                 ),
                 const SizedBox(height: 8),
@@ -258,9 +265,9 @@ class RequestBox extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildPill("homebound: $homebound"),
+                    _buildPill("Homebound: $homebound"),
                     const SizedBox(width: 5),
-                    _buildPill("volunteer: $volunteer"),
+                    _buildPill("Volunteer: $volunteer"),
                     const SizedBox(width: 5),
                     _buildPill("Zip code: $areacode"),
                     const SizedBox(width: 5),
@@ -294,7 +301,7 @@ class RequestBox extends StatelessWidget {
               Text(
         text,
                 textAlign: TextAlign.left,
-        style: Styles.buttonTextStyle.copyWith(fontSize: 14, color: Colors.white),
+        style: Styles.bodyStyle,
       ),
             
           ),
