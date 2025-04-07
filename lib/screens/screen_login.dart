@@ -80,6 +80,29 @@ class LoginScreenState extends State<LogInScreen> {
             .collection(userType) // userType is the collection name
             .doc(user.uid)
             .get();
+        
+        // Query 1: where homeboundId == userId
+        final homeboundQuery = await FirebaseFirestore.instance
+            .collection('guardian_requests')
+            .where('homeboundId', isEqualTo: user.uid)
+            .get();
+        print(homeboundQuery.docs);
+
+        // Query 2: where guardianId == userId
+        final guardianQuery = await FirebaseFirestore.instance
+            .collection('guardian_requests')
+            .where('guardianId', isEqualTo: user.uid)
+            .get();
+        print(guardianQuery.docs);
+
+        // Combine results (avoiding duplicates by doc.id)
+        final allDocs = {
+          for (var doc in homeboundQuery.docs) doc.id: doc,
+          for (var doc in guardianQuery.docs) doc.id: doc,
+        }.values.toList();
+
+        final guardianData = allDocs.isNotEmpty ? allDocs[0].data() : null;
+        print(guardianData);
 
         if (userDoc.exists) {
           final userData = userDoc.data();
@@ -97,8 +120,12 @@ class LoginScreenState extends State<LogInScreen> {
           await prefs.setString('orgId', userData?['orgId'] ?? '');
           await prefs.setStringList(
               'services', userData?['services']?.cast<String>() ?? []);
-          final amount = userData?['amount'] ?? 0; // Default to 0 if not found
+          final rawAmount = userData?['amount']?.toString() ?? '0';
+          final amount = int.tryParse(rawAmount.split('.').first) ?? 0; // Default to 0 if not found
           await prefs.setInt('amount', amount);
+          await prefs.setString('homeboundId', guardianData?['homeboundId'] ?? '');
+          await prefs.setString('guardianId', guardianData?['guardianId'] ?? '');
+          await prefs.setString('guardianName', guardianData?['guardianName'] ?? '');
           setState(() => _isLoading = false);
           _goToHome();
           return 'success';
@@ -112,6 +139,7 @@ class LoginScreenState extends State<LogInScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
+      print('$e');
       return 'An error occurred';
     }
   }

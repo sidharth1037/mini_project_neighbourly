@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Required for SystemNavigator.pop()
 import 'package:mini_ui/menu/organization/navigation.dart';
+import 'package:mini_ui/profile/profilewithguard.dart';
 import 'package:mini_ui/volunteers/reqhistory/reqhistory.dart';
 import 'package:mini_ui/volunteers/volwallet.dart';
 import 'profile/profile.dart';
@@ -68,17 +69,29 @@ class MainScreenState extends State<MainScreen> {
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ];
     } else if (userType == 'homebound') {
+      final guardianId = prefs.getString('guardianId') ?? '';
       // Set pages and nav items for homebound
-      pages = [
-        const RequestsPage(),
-        Home(content: contentsHomebound, title: "Menu", backbutton: false),
-        const ProfilePage(),
-      ];
-      navItems = const [
-        BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Menu'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-      ];
+      if (guardianId == '') {
+        pages = [
+          const RequestsPage(),
+          Home(content: contentsHomebound, title: "Menu", backbutton: false),
+          const ProfilePage(),
+        ];
+        navItems = const [
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Menu'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ];
+      } else {
+        pages = [
+          const RequestsPage(),
+          const ProfilePageWithGuard(),
+        ];
+        navItems = const [
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ];
+      }
     } else if (userType == 'volunteers') {
       // Set pages and nav items for homebound
       pages = [

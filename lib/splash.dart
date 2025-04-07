@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mini_ui/guardians/homebound.dart';
 import 'package:mini_ui/navbar.dart';
 import 'package:mini_ui/screens/screen_login.dart';
 import 'package:mini_ui/volunteers/vol_services.dart';
@@ -52,11 +53,14 @@ class SplashScreenState extends State<SplashScreen>
     final userType = prefs.getString('userType') ?? '';
     String organizationName = '';
     List<String> serviceList = [];
+    String homeboundId = '';
 
     if (userType == 'organization') {
       organizationName = prefs.getString('orgName') ?? 'none';
     } else if (userType == 'volunteers') {
       serviceList = prefs.getStringList('services') ?? [];
+    } else if (userType == 'guardians') {
+      homeboundId = prefs.getString('homeboundId') ?? '';
     }
 
     if (isLoggedIn) {
@@ -82,6 +86,21 @@ class SplashScreenState extends State<SplashScreen>
               const Duration(milliseconds: 500), // Smooth transition duration
             pageBuilder: (context, animation, secondaryAnimation) =>
               const ServicesProvided(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+            },
+          ));
+        }
+      }else if (userType == 'guardians' && homeboundId == '') {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(PageRouteBuilder(
+            transitionDuration:
+              const Duration(milliseconds: 500), // Smooth transition duration
+            pageBuilder: (context, animation, secondaryAnimation) =>
+              const ConnectHomeBound(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,
