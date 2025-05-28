@@ -1,5 +1,4 @@
 import 'package:flutter/services.dart';
-import 'package:mini_ui/navbar.dart';
 import 'package:mini_ui/splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../styles/custom_style.dart';
@@ -94,7 +93,7 @@ class ConnectHomeBoundState extends State<ConnectHomeBound> with CustomStyle {
             .where('email', isEqualTo: email)
             .get();
 
-        if (homeboundQuery.docs.isEmpty) {
+        if (homeboundQuery.docs.isEmpty && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No account found with this email.')),
           );
@@ -107,7 +106,7 @@ class ConnectHomeBoundState extends State<ConnectHomeBound> with CustomStyle {
             .where('homeboundEmail', isEqualTo: email)
             .get();
 
-        if (existingRequestQuery.docs.isNotEmpty) {
+        if (existingRequestQuery.docs.isNotEmpty && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Someone else already sent a request.')),
           );
@@ -130,14 +129,18 @@ class ConnectHomeBoundState extends State<ConnectHomeBound> with CustomStyle {
           sentEmail = email;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request sent successfully!')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Request sent successfully!')),
+          );
+        }
       } catch (e) {
         debugPrint("Error sending request: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unknown error occurred. Please try again.')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unknown error occurred. Please try again.')),
+          );
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -172,12 +175,14 @@ Future<void> removeRequest(BuildContext context) async {
         final data = doc.data();
         if (data.containsKey('homeboundId') && data['homeboundId'].toString().isNotEmpty) {
           // Already accepted, show snackbar
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("This request has already been accepted."),
-              backgroundColor: Styles.lightPurple,
-            ),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("This request has already been accepted."),
+                backgroundColor: Styles.lightPurple,
+              ),
+            );
+          }
           return;
         }
 
@@ -217,13 +222,21 @@ Future<void> removeRequest(BuildContext context) async {
 
       if (query.docs.isEmpty) {
         debugPrint("No matching request found.");
+        setState(() {
+        isLoading = false;
+        hasSent = false; // Set loading to false after fetching data
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This request has already been rejected.'),
+          backgroundColor: Styles.lightPurple,),
+          );
+        }
         return;
       }
 
       final doc = query.docs.first;
       final data = doc.data();
-
-      print(data);
 
       if (data['homeboundId'] != "") {
 
@@ -231,15 +244,19 @@ Future<void> removeRequest(BuildContext context) async {
         await prefs.setString('guardianName', data['guardianName'] ?? '');
         await prefs.setString('homeboundId', data['homeboundId'] ?? '');
         // Pop all previous pages and go to SplashScreen
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const SplashScreen()),
-          (Route<dynamic> route) => false,
-        );
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const SplashScreen()),
+            (Route<dynamic> route) => false,
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request has not been accepted yet.'),
-        backgroundColor: Styles.lightPurple,),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Request has not been accepted yet.'),
+          backgroundColor: Styles.lightPurple,),
+          );
+        }
         debugPrint("Request found but not yet accepted.");
       }
 
@@ -248,9 +265,11 @@ Future<void> removeRequest(BuildContext context) async {
       });
     } catch (e) {
       debugPrint("Error continuing request: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occurred. Please try again.')),
+        );
+      }
     }
   }
 
@@ -356,7 +375,7 @@ Future<void> removeRequest(BuildContext context) async {
                           if (!hasSent) ...[
                             const Text(
                               "Enter email of the homebound's account.\nThen go to the profile in the homebound's account and accept the request.",
-                              style: TextStyle(fontSize: 17, color: Colors.white),
+                              style: TextStyle(fontSize: 15, color: Colors.white),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 40),
@@ -365,7 +384,7 @@ Future<void> removeRequest(BuildContext context) async {
                             const SizedBox(height: 30),
                             Text(
                               'The request has been sent to HomeBound with email "$sentEmail"\nAccept the request in the homebound\'s Profile Page and press Continue.',
-                              style: const TextStyle(fontSize: 17, color: Colors.white),
+                              style: const TextStyle(fontSize: 15, color: Colors.white),
                               textAlign: TextAlign.center,
                             ),
                           ],

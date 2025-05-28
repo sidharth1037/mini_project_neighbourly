@@ -8,10 +8,10 @@ class VolReqDetailsPage extends StatefulWidget {
   const VolReqDetailsPage({super.key, required this.requestId});
 
   @override
-  _VolReqDetailsPageState createState() => _VolReqDetailsPageState();
+  VolReqDetailsPageState createState() => VolReqDetailsPageState();
 }
 
-class _VolReqDetailsPageState extends State<VolReqDetailsPage> {
+class VolReqDetailsPageState extends State<VolReqDetailsPage> {
   Map<String, dynamic>? requestDetails;
   bool isLoading = true;
 

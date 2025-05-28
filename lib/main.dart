@@ -23,7 +23,7 @@ void main() async {
 
     runApp(const MyApp());
   } catch (e) {
-    print("Firebase initialization error: $e");
+    debugPrint("Firebase initialization error: $e");
   }
 }
 

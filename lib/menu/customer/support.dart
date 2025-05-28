@@ -10,7 +10,7 @@ class CustomerSupport extends StatelessWidget with CustomStyle {
     double deviceHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: DecoratedBox(
-        decoration: BoxDecoration(color: Styles.darkPurple),
+        decoration: const BoxDecoration(color: Styles.darkPurple),
         child: Column(
           children: [
             Container(
@@ -18,7 +18,7 @@ class CustomerSupport extends StatelessWidget with CustomStyle {
               alignment: Alignment.center,
               child: Stack(
                 children: [
-                  Align(
+                  const Align(
                     alignment: Alignment.center,
                     child: Text("Customer Support",
                         style: Styles.titleStyle, textAlign: TextAlign.center),
@@ -37,7 +37,7 @@ class CustomerSupport extends StatelessWidget with CustomStyle {
             Expanded(
               flex: 4,
               child: ListView(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 children: [
                   Container(
                     decoration: BoxDecoration(
@@ -45,24 +45,24 @@ class CustomerSupport extends StatelessWidget with CustomStyle {
                       color: Styles.lightPurple,
                     ),
                     child: ListTile(
-                      leading: Icon(Icons.phone, color: Colors.white),
+                      leading: const Icon(Icons.phone, color: Colors.white),
                       title: Text("Call Us        -     +91 1231231230",
                           style: Styles.buttonTextStyle
                               .copyWith(color: Colors.white)),
                       onTap: () {},
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
-                      contentPadding: EdgeInsets.all(15),
+                      contentPadding: const EdgeInsets.all(15),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: Styles.lightPurple,
                     ),
                     child: ListTile(
-                      leading: Icon(Icons.email, color: Colors.white),
+                      leading: const Icon(Icons.email, color: Colors.white),
                       title: Text("Email Us     -     customercare@app.in",
                           style: Styles.buttonTextStyle
                               .copyWith(color: Colors.white)),
@@ -70,17 +70,17 @@ class CustomerSupport extends StatelessWidget with CustomStyle {
                       tileColor: Styles.lightPurple,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
-                      contentPadding: EdgeInsets.all(15),
+                      contentPadding: const EdgeInsets.all(15),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: Styles.lightPurple,
                     ),
                     child: ListTile(
-                      leading: Icon(Icons.chat, color: Colors.white),
+                      leading: const Icon(Icons.chat, color: Colors.white),
                       title: Text("Chat            -     +91 1231231230",
                           style: Styles.buttonTextStyle
                               .copyWith(color: Colors.white)),
@@ -88,7 +88,7 @@ class CustomerSupport extends StatelessWidget with CustomStyle {
                       tileColor: Styles.lightPurple,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
-                      contentPadding: EdgeInsets.all(15),
+                      contentPadding: const EdgeInsets.all(15),
                     ),
                   ),
                 ],

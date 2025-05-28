@@ -80,11 +80,11 @@ class CardListScreenState extends State<CardListScreen> with CustomStyle {
         keyboardType: type,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white),
-          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-          focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Styles.darkPurple)),
+          labelStyle: const TextStyle(color: Colors.white),
+          enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Styles.darkPurple)),
         ),
-        style: TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.white),
       ),
     );
   }
@@ -100,14 +100,14 @@ class CardListScreenState extends State<CardListScreen> with CustomStyle {
 
     return Scaffold(
       body: DecoratedBox(
-        decoration: BoxDecoration(color: Styles.darkPurple),
+        decoration: const BoxDecoration(color: Styles.darkPurple),
         child: Column(
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.33,
               child: Stack(
                 children: [
-                  Align(
+                  const Align(
                     alignment: Alignment.center,
                     child: Text("Saved Cards", style: Styles.titleStyle),
                   ),
@@ -124,18 +124,18 @@ class CardListScreenState extends State<CardListScreen> with CustomStyle {
             ),
             Expanded(
               child: ListView.builder(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 itemCount: savedCards.length,
                 itemBuilder: (context, index) {
                   return Container(
-                    margin: EdgeInsets.symmetric(vertical: 10),
+                    margin: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: Styles.lightPurple,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
                     ),
                     child: ListTile(
-                      leading: Icon(Icons.credit_card, color: Colors.white),
+                      leading: const Icon(Icons.credit_card, color: Colors.white),
                       title: Text(
                         "**** **** **** ${savedCards[index]["cardNumber"]!.substring(savedCards[index]["cardNumber"]!.length - 4)}",
                         style: buttonTextStyle.copyWith(color: Colors.white),
@@ -145,7 +145,7 @@ class CardListScreenState extends State<CardListScreen> with CustomStyle {
                         style: buttonTextStyle.copyWith(color: Colors.white70),
                       ),
                       trailing: IconButton(
-                        icon: Icon(Icons.delete, color: const Color.fromARGB(255, 255, 118, 115)),
+                        icon: const Icon(Icons.delete, color: Color.fromARGB(255, 255, 118, 115)),
                         onPressed: () => _deleteCard(index),
                       ),
                     ),
@@ -164,7 +164,7 @@ class CardListScreenState extends State<CardListScreen> with CustomStyle {
                 ),
               ),
               onPressed: _showAddCardDialog,
-              icon: Icon(Icons.add, color: Colors.white),
+              icon: const Icon(Icons.add, color: Colors.white),
               label: Text("Add Card", style: buttonTextStyle.copyWith(color: Colors.white)),
               ),
             ),

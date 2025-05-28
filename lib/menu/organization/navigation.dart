@@ -9,10 +9,10 @@ class OrganizationNavigation extends StatefulWidget {
   const OrganizationNavigation({super.key});
 
   @override
-  _OrganizationNavigationState createState() => _OrganizationNavigationState();
+  OrganizationNavigationState createState() => OrganizationNavigationState();
 }
 
-class _OrganizationNavigationState extends State<OrganizationNavigation> {
+class OrganizationNavigationState extends State<OrganizationNavigation> {
   int selectedIndex = 1;
   bool isLoading = true;
   Map<String, dynamic> orgDetails = {};
@@ -26,7 +26,6 @@ class _OrganizationNavigationState extends State<OrganizationNavigation> {
   Future<void> _initializeOrg() async {
     final prefs = await SharedPreferences.getInstance();
     final orgId = prefs.getString('orgId') ?? '';
-    print(orgId);
     if (orgId.isEmpty) {
       setState(() {
         selectedIndex = 1;

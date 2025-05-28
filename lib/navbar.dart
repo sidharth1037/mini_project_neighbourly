@@ -22,7 +22,7 @@ List<Map<String, dynamic>> contentsHomebound=[
         {"icon":Icons.location_city,"label":"Neighbourhood","Navigation":Neighbourhood()},
         {"icon":Icons.priority_high,"label":"Volunteer\nPriority List","Navigation": const PriorityPage()},
         {"icon":Icons.support_agent,"label":"Customer\nCare","Navigation": const CustomerSupport()},
-        {"icon":Icons.wallet,"label":"Wallet","Navigation":Wallet()}
+        {"icon":Icons.wallet,"label":"Payment\nSummary","Navigation":Wallet()}
   ];
 
 List<Map<String, dynamic>> contentsVolunteer=[
@@ -30,7 +30,7 @@ List<Map<String, dynamic>> contentsVolunteer=[
         {"icon":Icons.location_city,"label":"Neighbourhood","Navigation":Neighbourhood()},
         {"icon":Icons.group,"label":"Organization","Navigation": const OrganizationNavigation()},
         {"icon":Icons.support_agent,"label":"Customer\nCare","Navigation": const CustomerSupport()},
-        {"icon":Icons.wallet,"label":"Wallet","Navigation":VolWallet()}
+        {"icon":Icons.wallet,"label":"Payment\nSummary","Navigation":VolWallet()}
   ];
 
 class MainScreen extends StatefulWidget {

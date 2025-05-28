@@ -68,11 +68,13 @@ class ServicesProvidedState extends State<ServicesProvided2> with CustomStyle {
 
         await prefs.setStringList('services', selectedServices);
 
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-          (route) => false,
-        );
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
+          );
+        }
       } catch (e) {
         debugPrint("Error: $e");
       }

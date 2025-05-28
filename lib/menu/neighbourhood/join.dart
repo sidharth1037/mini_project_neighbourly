@@ -24,7 +24,7 @@ class JoinNeighbourhood extends StatelessWidget with CustomStyle {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('neighbourhood')
           .where('name', isGreaterThanOrEqualTo: query)
-          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+          .where('name', isLessThanOrEqualTo: '$query\uf8ff')
           .get();
       filteredItems.value = querySnapshot.docs.map((doc) {
                         return{ 
@@ -32,7 +32,6 @@ class JoinNeighbourhood extends StatelessWidget with CustomStyle {
                       ...doc.data() as Map<String,dynamic>};}
                       
                       ).toList();
-      print(filteredItems.value);
       
     } catch (e) {
       debugPrint("Error fetching Firestore data: $e");
@@ -50,7 +49,7 @@ class JoinNeighbourhood extends StatelessWidget with CustomStyle {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: DecoratedBox(
-          decoration: BoxDecoration(color: Styles.darkPurple),
+          decoration: const BoxDecoration(color: Styles.darkPurple),
           child: Column(
             children: [
               Container(

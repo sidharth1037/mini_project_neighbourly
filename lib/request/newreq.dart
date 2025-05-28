@@ -35,9 +35,32 @@ class NewRequestPageState extends State<NewRequestPage> {
 
       setState(() => _isLoading = true);
 
-      if (selectedDate == null
-        || selectedTime == null
-        || descriptionController.text.isEmpty
+      final now = DateTime.now();
+
+      if (selectedDate == null || selectedTime == null) {
+        return "Please select date and time.";
+      }
+
+      // Check if selected date is today
+      bool isToday = selectedDate.year == now.year &&
+          selectedDate.month == now.month &&
+          selectedDate.day == now.day;
+
+      if (isToday) {
+        final selectedDateTime = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+
+        if (selectedDateTime.isBefore(now)) {
+          return "Selected time is in the past.";
+        }
+      }
+
+      if (descriptionController.text.isEmpty
         || amountController.text.isEmpty) {
         return "Please fill all fields before submitting.";
       }
@@ -59,15 +82,25 @@ class NewRequestPageState extends State<NewRequestPage> {
 
         final prefs = await SharedPreferences.getInstance();
         String neighbourhoodId = prefs.getString('neighbourhoodId') ?? "";
+        String userId = prefs.getString('userId') ?? '';
+        String time = "";
+        final homeboundId = prefs.getString('homeboundId') ?? "";
+        if (homeboundId != "") {
+          userId = homeboundId;
+        }
+
+        if(context.mounted) {
+          time = selectedTime.format(context);
+        }
 
         // Create requestData dynamically based on requestAt
         final requestData = {
-          "homeboundId": FirebaseAuth.instance.currentUser!.uid,
+          "homeboundId": userId,
           "volunteerId": "",
           "requestType": selectedRequest,
           "description": descriptionController.text,
           "date": "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}",
-          "time": selectedTime.format(context),
+          "time": time,
           "volunteerGender": selectedGender,
           "requestAt": requestAt,
           "amount": double.tryParse(amountController.text)?.toStringAsFixed(2) ?? "0.00",
@@ -99,7 +132,6 @@ class NewRequestPageState extends State<NewRequestPage> {
         await FirebaseFirestore.instance.collection('current_requests').add(requestData);
         return "success";
       } catch (e) {
-        print("Error: $e"); // Debugging output
         return "An error occurred. Try again later.";
       }
 
@@ -313,7 +345,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Dropdown
-                    Text("Request Type :", style: Styles.bodyStyle),
+                    const Text("Request Type :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -361,7 +393,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                     const SizedBox(height: 15),
 
                     // Description TextField
-                    Text("Description :", style: Styles.bodyStyle),
+                    const Text("Description :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     TextField(
                       controller: descriptionController,
@@ -384,7 +416,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                     const SizedBox(height: 15),
 
                     // Date Picker
-                    Text("Select Date :", style: Styles.bodyStyle),
+                    const Text("Select Date :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () => _pickDate(context),
@@ -407,7 +439,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                     const SizedBox(height: 15),
 
                     // Time Picker
-                    Text("Select Time :", style: Styles.bodyStyle),
+                    const Text("Select Time :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () => pickTime(context),
@@ -427,7 +459,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    Text("Volunteer Gender :", style: Styles.bodyStyle),
+                    const Text("Volunteer Gender :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -459,7 +491,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                               return Colors.white;
                             }),
                             ),
-                            Text("Any", style: Styles.bodyStyle),
+                            const Text("Any", style: Styles.bodyStyle),
                           ],
                           ),
                         ),
@@ -485,7 +517,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                               return Colors.white;
                             }),
                             ),
-                            Text("Male", style: Styles.bodyStyle),
+                            const Text("Male", style: Styles.bodyStyle),
                           ],
                           ),
                         ),
@@ -511,7 +543,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                               return Colors.white;
                             }),
                             ),
-                            Text("Female", style: Styles.bodyStyle),
+                            const Text("Female", style: Styles.bodyStyle),
                           ],
                           ),
                         ),
@@ -520,7 +552,7 @@ class NewRequestPageState extends State<NewRequestPage> {
                     ),
 
                     const SizedBox(height: 15),
-                    Text("Send Request To :", style: Styles.bodyStyle),
+                    const Text("Send Request To :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -554,7 +586,7 @@ class NewRequestPageState extends State<NewRequestPage> {
 
                     const SizedBox(height: 15),
                     // Amount Input
-                    Text("Amount :", style: Styles.bodyStyle),
+                    const Text("Amount :", style: Styles.bodyStyle),
                     const SizedBox(height: 8),
                     TextField(
                       controller: amountController,

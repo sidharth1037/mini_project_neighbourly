@@ -48,7 +48,7 @@ class Home extends StatelessWidget with CustomStyle {
     return Scaffold(
       backgroundColor: Styles.darkPurple,
       body: DecoratedBox(
-        decoration: BoxDecoration(color: Styles.darkPurple),
+        decoration: const BoxDecoration(color: Styles.darkPurple),
         child: SingleChildScrollView(
           child: Column(
               children: [
@@ -78,16 +78,16 @@ class Home extends StatelessWidget with CustomStyle {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Styles.lightPurple,
-                            padding: EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(8),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: const Color.fromARGB(10, 255, 255, 255),
+                              side: const BorderSide(
+                                color: Color.fromARGB(10, 255, 255, 255),
                                 width: 2,
                               ),
                             ),
-                            minimumSize: Size(120, 110),
-                            maximumSize: Size(150, 140),
+                            minimumSize: const Size(120, 110),
+                            maximumSize: const Size(150, 140),
                           ),
                           child: Center(
                             child: Column(

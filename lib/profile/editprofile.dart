@@ -4,9 +4,6 @@ import 'package:mini_ui/navbar.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../styles/styles.dart';
-import 'package:flutter/services.dart';
-
-
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic> userProfile  ;
@@ -89,7 +86,7 @@ class EditProfilePageState extends State<EditProfilePage> {
               height: MediaQuery.of(context).size.height * 0.33,
               child: Stack(
                 children: [
-                  Align(
+                  const Align(
                     alignment: Alignment.center,
                     child: Text("Edit Profile", style: Styles.titleStyle),
                   ),
@@ -114,35 +111,35 @@ class EditProfilePageState extends State<EditProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
                     child: Text("Name :", style: TextStyle(color: Colors.white, fontSize: 16),),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(
                   controller: _nameController,
                   style: const TextStyle(color: Colors.white),
                   decoration: Styles.inputDecoration,
                   ),
                  
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                  const SizedBox(height: 20),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
                     child: Text("Gender :", style: TextStyle(color: Colors.white, fontSize: 16),),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Container(
                   child: _buildDropdownField(),
 
                   )
           
                     ,
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                  const SizedBox(height: 20),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
                     child: Text("Address :", style: TextStyle(color: Colors.white, fontSize: 16),),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(
                   controller: _addressController,
                   style: const TextStyle(color: Colors.white),
@@ -163,7 +160,7 @@ class EditProfilePageState extends State<EditProfilePage> {
                   // decoration: Styles.inputDecoration,
                   // maxLines: null, // Allows the TextField to expand with content
                   // ),},
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                   Container(
                   width: double.infinity,
                   height: 56,
@@ -175,7 +172,7 @@ class EditProfilePageState extends State<EditProfilePage> {
                     onPressed: () {
                       showConfirmationDialog(context);
                     },
-                    child: Text('Save Changes', style: Styles.buttonTextStyle),
+                    child: const Text('Save Changes', style: Styles.buttonTextStyle),
                   ),
                   ),
                 ],

@@ -88,24 +88,19 @@ class ProfilePageWithGuardState extends State<ProfilePageWithGuard> with CustomS
               child: Column(
                 children: [
                   // Profile Section Box
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: Implement onTap logic
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: Styles.boxDecoration,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Guardian Name
-                          Text("Guardian: $guardianName", style: Styles.nameStyle),
-
-                          // Forward Arrow
-                          const Icon(Icons.arrow_forward_ios, size: 20, color: Styles.white),
-                        ],
-                      ),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: Styles.boxDecoration,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Guardian Name
+                        Text("Guardian: $guardianName", style: Styles.nameStyle),
+                  
+                        // Forward Arrow
+                        // const Icon(Icons.arrow_forward_ios, size: 20, color: Styles.white),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -325,7 +320,9 @@ void showConfirmationDialog(BuildContext context) {
                 child: TextButton(
                   onPressed: () async {
                     await ProfilePageWithGuardState._auth.signOut(context);
-                    ProfilePageWithGuardState._goToLogin(context);
+                    if (context.mounted) {
+                      ProfilePageWithGuardState._goToLogin(context);
+                    }
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.red[400],

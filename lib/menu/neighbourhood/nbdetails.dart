@@ -19,16 +19,20 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
       _isLoading = true;
     });
   final prefs = await SharedPreferences.getInstance();
-  final _userType = prefs.getString('userType') ?? ""; // Fallback if not found
-  print ("User Name: $_userType");
+  String userType = prefs.getString('userType') ?? "";
+  String userId = prefs.getString('userId')??'';
+  final homeboundId = prefs.getString('homeboundId')??'';
+  if (homeboundId != "") {
+    userId = homeboundId;
+    userType = "homebound";
+  }  // Fallback if not found
   try {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      print("Error: User not logged in");
       return;
     }
 
-    DocumentReference userDocRef = FirebaseFirestore.instance.collection(_userType).doc(user.uid);
+    DocumentReference userDocRef = FirebaseFirestore.instance.collection(userType).doc(userId);
 
     // Update the user document by adding the field
     await userDocRef.set({'neighbourhoodId': neighbourhoodId}, SetOptions(merge: true));
@@ -37,12 +41,11 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
         .collection('neighbourhood') // Change to your collection name
         .doc(neighbourhoodId)
         .update({
-          _userType: FieldValue.increment(1), // Increment by 1
+          userType: FieldValue.increment(1), // Increment by 1
         });
 
-    print("Neighbourhood ID added successfully to $_userType");
   } catch (e) {
-    print("Error joining neighborhood: $e");
+    debugPrint("Error joining neighborhood: $e");
   }
   setState(() {
     _isLoading = false;
@@ -120,11 +123,13 @@ class _ReqDetailsPageState extends State<ReqDetailsPage> {
                                 await joinNeighbourhood(neighbourhoodId);
                                 if (mounted) {
                                   int popCount = 0;
-                                  Navigator.of(context).popUntil((route) => popCount++ == 3);
-                                  Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => Neighbourhood()),
-                                  );
+                                  if (context.mounted) {
+                                    Navigator.of(context).popUntil((route) => popCount++ == 3);
+                                    Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => Neighbourhood()),
+                                    );
+                                  }
                                 }
                                 },
                               style: TextButton.styleFrom(

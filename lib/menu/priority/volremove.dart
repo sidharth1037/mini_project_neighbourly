@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mini_ui/menu/priority/prioritylist.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../styles/styles.dart';
 
 class Volremove extends StatelessWidget {
   final Map<String, dynamic> requestDetails;
-  const Volremove({Key? key, required this.requestDetails}) : super(key: key);
+  const Volremove({super.key, required this.requestDetails});
 
   @override
   Widget build(BuildContext context) {
-    String volunteerId = requestDetails["volunteerId"] ?? "";
     return Scaffold(
       backgroundColor: Styles.darkPurple,
       body: SingleChildScrollView(
@@ -147,13 +146,13 @@ class Volremove extends StatelessWidget {
 
 void showConfirmationDialog(
     BuildContext context, Map<String, dynamic> details) {
+  bool isLoading = false; // Moved here for proper state management
+
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return StatefulBuilder(
         builder: (context, setStateDialog) {
-          bool isLoading = false; // Local loading state
-
           return AlertDialog(
             backgroundColor: Styles.mildPurple,
             shape: RoundedRectangleBorder(
@@ -162,9 +161,10 @@ void showConfirmationDialog(
             title: const Text(
               "Confirm Removal",
               style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -203,8 +203,10 @@ void showConfirmationDialog(
                           "Remove Volunteer",
                           Colors.red[500]!,
                           () async {
-                            setStateDialog(
-                                () => isLoading = true); // Show loader
+                            setStateDialog(() {
+                              isLoading = true;
+                            });
+
                             await removeVolunteer(details["volunteerId"] ?? "");
 
                             if (context.mounted) {
@@ -214,7 +216,8 @@ void showConfirmationDialog(
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => PriorityPage()),
+                                  builder: (context) => const PriorityPage(),
+                                ),
                               );
                             }
                           },
@@ -228,6 +231,7 @@ void showConfirmationDialog(
     },
   );
 }
+
 
 Widget buildDialogButton(
     BuildContext context, String text, Color color, VoidCallback onPressed) {
@@ -252,14 +256,15 @@ Widget buildDialogButton(
 Future<void> removeVolunteer(String volunteerId) async {
   if (volunteerId.isEmpty) return;
   try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      debugPrint("Error: User not logged in");
-      return;
+    final prefs = await SharedPreferences.getInstance();
+    String userId = prefs.getString('userId')??'';
+    final homeboundId = prefs.getString('homeboundId')??"";
+    if(homeboundId != "") {
+      userId = homeboundId;
     }
     await FirebaseFirestore.instance
         .collection("homebound")
-        .doc(user.uid)
+        .doc(userId)
         .update({
       'volunteerId': FieldValue.arrayRemove([volunteerId]),
     });

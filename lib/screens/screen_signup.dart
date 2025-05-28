@@ -25,6 +25,7 @@ class SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _aadharController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   String? _selectedGender;
   String? _selectedRole; // Default role
@@ -37,6 +38,7 @@ class SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _phoneController.dispose();
     _dobController.dispose();
     _addressController.dispose();
     _aadharController.dispose();
@@ -83,6 +85,14 @@ class SignUpScreenState extends State<SignUpScreen> {
           return "An account with this email already exists in $collection";
         }
       }
+      String phoneNumber = _phoneController.text.trim();
+      if (phoneNumber.isEmpty) {
+        return "Phone number cannot be empty";
+      }
+
+      if (phoneNumber.length != 10) {
+        return "Phone number must be exactly 10 digits";
+      }
 
       if (_passwordController.text.length < 6) {
         setState(() {
@@ -118,7 +128,8 @@ class SignUpScreenState extends State<SignUpScreen> {
           "role": _selectedRole,
           "age": age,
           "createdAt": FieldValue.serverTimestamp(),
-          "amount": 0,
+          "amount": "0.00",
+          "phone": _phoneController.text.trim(),
         };
 
         if (_selectedRole == "Homebound") {
@@ -208,7 +219,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                     style: Styles.nameStyle,
                     textAlign: TextAlign.center,
                   ),
-                  Text(
+                  const Text(
                     "Please enter your details!",
                     style: Styles.bodyStyle,
                     textAlign: TextAlign.center,
@@ -233,6 +244,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                           label: 'Email',
                           keyboardType: TextInputType.emailAddress,
                         ),
+                        _buildPhoneField(),
                         _buildTextField(
                             controller: _addressController, label: 'Address'),
                         _buildTextField(
@@ -413,4 +425,28 @@ class SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+
+  Widget _buildPhoneField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: _phoneController,
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(10),
+        ],
+        style: const TextStyle(color: Styles.white),
+        cursorColor: Styles.white,
+        decoration: Styles.inputDecoration.copyWith(
+          labelText: 'Mobile Number',
+          labelStyle: const TextStyle(color: Styles.white),
+          prefixIcon: const Icon(Icons.phone, color: Styles.white),
+          prefixText: '+91  ', // Country code
+          prefixStyle: const TextStyle(color: Styles.white, fontSize: 16),
+        ),
+      ),
+    );
+  }
+
 }

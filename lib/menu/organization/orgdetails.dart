@@ -33,13 +33,14 @@ void removeField() async {
       'orgId': FieldValue.delete(),
     });
 
-    print('Field removed successfully');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("You have left the organization!")),
-                          );
-                        Navigator.pop(context);
+                              if (mounted) {
+  ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("You have left the organization!")),
+                            );
+                          Navigator.pop(context);
+}
   } catch (e) {
-    print("Error removing field: $e");
+    debugPrint("Error removing field: $e");
   } 
 }
 
@@ -114,11 +115,13 @@ void removeField() async {
                                 await joinNeighbourhood(orgId);
                                 if (mounted) {
                                   int popCount = 0;
-                                  Navigator.of(context).popUntil((route) => popCount++ == 2);
-                                  Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const OrganizationNavigation()),
-                                  );
+                                  if (context.mounted) {
+                                    Navigator.of(context).popUntil((route) => popCount++ == 2);
+                                    Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const OrganizationNavigation()),
+                                    );
+                                  }
                                 }
                                 },
                               style: TextButton.styleFrom(
@@ -248,7 +251,7 @@ void removeField() async {
       else{
            return Scaffold(
         body: DecoratedBox(
-          decoration: BoxDecoration(color: Styles.darkPurple),
+          decoration: const BoxDecoration(color: Styles.darkPurple),
           child: Column(
             children: [
               Container(
@@ -256,7 +259,7 @@ void removeField() async {
                 alignment: Alignment.center,
                 child: Stack(
                   children: [
-                    Align(
+                    const Align(
                       alignment: Alignment.center,
                       child: Text("Your Organization", style: Styles.titleStyle, textAlign: TextAlign.center),
                     ),
@@ -368,16 +371,14 @@ void removeField() async {
 // Function to add neighbourhood ID to the current user's collection
 Future<void> joinNeighbourhood(String neighbourhoodId) async {
   final prefs = await SharedPreferences.getInstance();
-  final _userType = prefs.getString('userType') ?? "User"; // Fallback if not found
-  print ("User Name: $_userType");
+  final userType = prefs.getString('userType') ?? "User"; // Fallback if not found
   try {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      print("Error: User not logged in");
       return;
     }
 
-    DocumentReference userDocRef = FirebaseFirestore.instance.collection(_userType).doc(user.uid);
+    DocumentReference userDocRef = FirebaseFirestore.instance.collection(userType).doc(user.uid);
 
     // Update the user document by adding the field
     await userDocRef.set({'orgId': neighbourhoodId}, SetOptions(merge: true));
@@ -386,11 +387,10 @@ Future<void> joinNeighbourhood(String neighbourhoodId) async {
         .collection('organization') // Change to your collection name
         .doc(neighbourhoodId)
         .update({
-          _userType: FieldValue.increment(1), // Increment by 1
+          userType: FieldValue.increment(1), // Increment by 1
         });
 
-    print("Org ID added successfully");
   } catch (e) {
-    print("Error joining Org: $e");
+    debugPrint("Error joining Org: $e");
   }
 }

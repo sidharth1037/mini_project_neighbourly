@@ -51,6 +51,7 @@ class RequestsPageState extends State<VolRequestsPage> {
   String? neighbourhoodId = prefs.getString('neighbourhoodId') ?? "";
   List<String> selectedServices = prefs.getStringList('services') ?? [];
   String? userId = prefs.getString('userId') ?? "";
+  String? userGender = prefs.getString('userGender') ?? "";
   // Fetch neighbourhood-matching requests
   QuerySnapshot querySnapshot1 = await FirebaseFirestore.instance
       .collection('current_requests')
@@ -96,7 +97,8 @@ class RequestsPageState extends State<VolRequestsPage> {
 
   fetchedRequests = fetchedRequests
     .where((doc) => selectedServices.contains(doc['requestType']) &&
-                    (doc['volunteerId'] == "" || doc['volunteerId'] == userId))
+                    (doc['volunteerId'] == "" || doc['volunteerId'] == userId)
+                    && (doc['volunteerGender'] == userGender || doc['volunteerGender'] == "Any"))
     .toList();
 
 
@@ -255,6 +257,7 @@ class _RequestBoxState extends State<RequestBox> {
               .replaceAll('"', '')
               .split(','),
         );
+        debugPrint("Extracted keywords: $keywords");
 
         if (keywords.isNotEmpty) {
           final userDocRef = FirebaseFirestore.instance

@@ -8,13 +8,14 @@ class VolunteerListPage extends StatefulWidget {
   const VolunteerListPage({super.key});
 
   @override
-  _VolunteerListPageState createState() => _VolunteerListPageState();
+  VolunteerListPageState createState() => VolunteerListPageState();
 }
 
-class _VolunteerListPageState extends State<VolunteerListPage> {
+class VolunteerListPageState extends State<VolunteerListPage> {
   List<Map<String, dynamic>> requests=[];
   // Placeholder for userId
-  bool isLoading = true; // Loading state for the page
+  bool isLoading = true;
+  bool isEmpty = false; // Loading state for the page
   @override
   void initState() {
     super.initState();
@@ -42,8 +43,12 @@ class _VolunteerListPageState extends State<VolunteerListPage> {
                 doc.data() as Map<String,dynamic>
                       
                       ).toList();
-      print(requests);
         setState(() {
+      if (requests.isEmpty) {
+        isEmpty = true; // Set empty state if no requests found
+      } else {
+        isEmpty = false; // Reset empty state if requests are found
+      }
       isLoading = false; // Update loading state
     });
       
@@ -61,7 +66,7 @@ class _VolunteerListPageState extends State<VolunteerListPage> {
     return const Scaffold(
       backgroundColor: Styles.darkPurple, // Set background color
       body: Center(
-        child: CircularProgressIndicator(color: Styles.mildPurple), // Loading indicator
+        child: CircularProgressIndicator(color: Colors.white), // Loading indicator
       ),
     );
   }
@@ -91,6 +96,14 @@ class _VolunteerListPageState extends State<VolunteerListPage> {
                     ],
                   ),
                 ),
+
+                if (isEmpty)
+                  const Center(
+                    child: Text(
+                      "No Volunteers Found",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ),
 
                 // Request Cards Section
                 Padding(

@@ -83,6 +83,11 @@ class ProfilePageState extends State<ProfilePage> with CustomStyle{
           requestId = doc.id;
           isLoading = false;
         });
+      } else {
+        setState(() {
+          hasRequest = false;
+          isLoading = false;
+        });
       }
     } catch (e) {
       debugPrint("Error fetching guardian request: $e");
@@ -114,7 +119,7 @@ class ProfilePageState extends State<ProfilePage> with CustomStyle{
           isLoading = false;
         });
 
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("This request has already been cancelled"),
@@ -132,11 +137,13 @@ class ProfilePageState extends State<ProfilePage> with CustomStyle{
       await prefs.setString('guardianId', data?['guardianId'] ?? '');
       await prefs.setString('guardianName', data?['guardianName'] ?? '');
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const SplashScreen()),
-        (Route<dynamic> route) => false,
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SplashScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
 
     } catch (e) {
       debugPrint("Error accepting request: $e");
@@ -311,8 +318,8 @@ class ProfilePageState extends State<ProfilePage> with CustomStyle{
                               children: [
                                 // Profile Picture
                                 Container(
-                                  width: 60,
-                                  height: 60,
+                                  width: 50,
+                                  height: 50,
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Styles.white,
@@ -404,6 +411,30 @@ class ProfilePageState extends State<ProfilePage> with CustomStyle{
                               Text("Change Services",
                                   style: TextStyle( fontSize: 16, color: Colors.white)),
                               Icon(Icons.change_circle, size: 26, color: Colors.white),
+                            ],
+                          ),
+                        ),
+                      ),},
+
+                    if (userType == "guardians") ...{
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                        decoration: Styles.boxDecoration.copyWith(
+                          color: Styles.lightPurple,
+                          border: Border.all(color: Styles.offWhite, width: 2), // White border added
+                          borderRadius: BorderRadius.circular(20), // Optional: ensure rounded corners match
+                        ),
+                        child: TextButton(
+                          onPressed: () async {
+                            showDisconnectDialog(context);
+                          },
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Disconnect with Homebound",
+                                  style: TextStyle( fontSize: 16, color: Colors.white)),
+                              Icon(Icons.arrow_forward_ios, size: 20, color: Colors.white), // Added arrow icon
                             ],
                           ),
                         ),
@@ -520,77 +551,235 @@ Widget settingsButton(String text) {
 
 // Confirmation Dialog Function
 void showConfirmationDialog(BuildContext context) {
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
+
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Styles.mildPurple,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          "Confirm Log Out",
-          style: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        content: const Text(
-          "Are you sure you want to log out?",
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
-        actions: [
-          Column(
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Styles.lightPurple,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+      return ValueListenableBuilder<bool>(
+        valueListenable: isLoading,
+        builder: (context, loading, _) {
+          return AlertDialog(
+            backgroundColor: Styles.mildPurple,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              "Confirm Log Out",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () async {
-                    await ProfilePageState._auth.signOut(context);
-                    ProfilePageState._goToLogin(context);
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.red[400],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+            ),
+            content: loading
+                ? const SizedBox(
+                    height: 80,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  )
+                : const Text(
+                    "Are you sure you want to log out?",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
-                  child: const Text(
-                    "Log Out",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+            actions: loading
+                ? [] // No buttons while loading
+                : [
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              backgroundColor: Styles.lightPurple,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () async {
+                              isLoading.value = true;
+
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.remove('homeboundId');
+                              await prefs.remove('sentEmail');
+                              await prefs.remove('hasSent');
+
+                              if (context.mounted) {
+                                await ProfilePageState._auth.signOut(context);
+                              }
+                              if (context.mounted) {
+                                ProfilePageState._goToLogin(context);
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.red[400],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text(
+                              "Log Out",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+                  ],
+          );
+        },
       );
     },
   );
 }
 
+
+void showDisconnectDialog(BuildContext context) {
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: isLoading,
+        builder: (context, loading, _) {
+          return AlertDialog(
+            backgroundColor: Styles.mildPurple,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              "Disconnect Accounts",
+              style: TextStyle(
+                  fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            content: loading
+                ? const SizedBox(
+                    height: 80,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    ),
+                  )
+                : const Text(
+                    "Logout and Login again in HomeBound's app for effects to take place after confirming.",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+            actions: loading
+                ? [] // empty actions while loading
+                : [
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              backgroundColor: Styles.lightPurple,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () async {
+                              isLoading.value = true;
+
+                              final prefs = await SharedPreferences.getInstance();
+                              final String? homeboundId = prefs.getString('homeboundId');
+
+                              if (homeboundId != null && homeboundId.isNotEmpty) {
+                                final querySnapshot = await FirebaseFirestore.instance
+                                    .collection('guardian_requests')
+                                    .where('homeboundId', isEqualTo: homeboundId)
+                                    .get();
+
+                                for (var doc in querySnapshot.docs) {
+                                  await FirebaseFirestore.instance
+                                      .collection('guardian_requests')
+                                      .doc(doc.id)
+                                      .delete();
+                                }
+                              }
+
+                              await prefs.remove('homeboundId');
+                              await prefs.remove('sentEmail');
+                              await prefs.remove('hasSent');
+
+                              if (context.mounted) {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(builder: (context) => const SplashScreen()),
+                                  (Route<dynamic> route) => false,
+                                );
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.red[400],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text(
+                              "Confirm",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+          );
+        },
+      );
+    },
+  );
+}

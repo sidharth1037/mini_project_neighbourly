@@ -14,7 +14,7 @@ class AuthService {
           email: email, password: password);
       return cred.user;
     } catch (e) {
-      print('Error creating user: $e');
+      debugPrint('Error creating user: $e');
     }
     return null;
   }
@@ -31,7 +31,7 @@ class AuthService {
 
       return cred.user;
     } catch (e) {
-      print('Error logging in: $e');
+      debugPrint('Error logging in: $e');
     }
     return null;
   }
@@ -44,10 +44,12 @@ class AuthService {
     await prefs.setBool('isLoggedIn', false);
 
     // Navigate to login screen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LogInScreen()),
-    );
+    if (context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LogInScreen()),
+      );
+}
   }
 
   Future<String> resetPassword(String email, BuildContext context) async {

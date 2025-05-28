@@ -8,10 +8,10 @@ class OrgVolReqDetailsPage extends StatefulWidget {
   const OrgVolReqDetailsPage({super.key, required this.requestId});
 
   @override
-  _OrgVolReqDetailsPageState createState() => _OrgVolReqDetailsPageState();
+  OrgVolReqDetailsPageState createState() => OrgVolReqDetailsPageState();
 }
 
-class _OrgVolReqDetailsPageState extends State<OrgVolReqDetailsPage> {
+class OrgVolReqDetailsPageState extends State<OrgVolReqDetailsPage> {
   Map<String, dynamic>? requestDetails;
   bool isLoading = true;
 

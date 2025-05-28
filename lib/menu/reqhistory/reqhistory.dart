@@ -25,16 +25,26 @@ class ReqHistoryPageState extends State<ReqHistoryPage> {
   Future<void> _loadRequests() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userId = prefs.getString("userId");
+    final homeboundId = prefs.getString("homeboundId")??"";
+    final userType = prefs.getString("userType");
+    QuerySnapshot snapshot;
 
     if (userId == null) {
       setState(() => isLoading = false);
       return;
     }
 
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection("completed_requests")
-        .where("homeboundId", isEqualTo: userId)
-        .get();
+    if (homeboundId != "" && userType == "guardians") {
+        snapshot = await FirebaseFirestore.instance
+          .collection('completed_requests')
+          .where('homeboundId', isEqualTo: homeboundId)
+          .get();
+      } else {
+        snapshot = await FirebaseFirestore.instance
+          .collection("completed_requests")
+          .where("homeboundId", isEqualTo: userId)
+          .get();
+      }
 
     setState(() {
       requests = snapshot.docs;

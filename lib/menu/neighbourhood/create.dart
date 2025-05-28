@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mini_ui/navbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,16 +8,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> joinNeighbourhood(String neighbourhoodId) async {
   final prefs = await SharedPreferences.getInstance();
-  final userType = prefs.getString('userType') ?? ""; // Fallback if not found
-  print ("User Name: $userType");
+  String userType = prefs.getString('userType') ?? "";
+  String userId = prefs.getString('userId')??'';
+  final homeboundId = prefs.getString('homeboundId')??'';
+  if (homeboundId != "") {
+    userId = homeboundId;
+    userType = "homebound";
+  }  // Fallback if not found
   try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      print("Error: User not logged in");
-      return;
-    }
 
-    DocumentReference userDocRef = FirebaseFirestore.instance.collection(userType).doc(user.uid);
+    DocumentReference userDocRef = FirebaseFirestore.instance.collection(userType).doc(userId);
 
     // Update the user document by adding the field
     await userDocRef.set({'neighbourhoodId': neighbourhoodId}, SetOptions(merge: true));
@@ -31,9 +30,8 @@ Future<void> joinNeighbourhood(String neighbourhoodId) async {
           userType: FieldValue.increment(1), // Increment by 1
         });
 
-    print("Neighbourhood ID added successfully to $userType");
   } catch (e) {
-    print("Error joining neighborhood: $e");
+    debugPrint("Error joining neighborhood: $e");
   }
 }
 
@@ -66,8 +64,8 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
           String nhId = neighborhoodRef.id;
           joinNeighbourhood(nhId);
 
-          print("neighbourhood created");}
-          catch(e){print("error: $e");}
+}
+          catch(e){debugPrint("error: $e");}
         }
       
       }
@@ -88,9 +86,9 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
           padding: const EdgeInsets.only(left: 14),
           child: Text(label, style: descriptionStyle,),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Padding(
-          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
           child: TextField(
             controller: controller,
             maxLines: maxLines,
@@ -109,7 +107,7 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
             ),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -125,7 +123,7 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: DecoratedBox(
-          decoration: BoxDecoration(color: Styles.darkPurple),
+          decoration: const BoxDecoration(color: Styles.darkPurple),
           child: SingleChildScrollView(
             child: Column(
               children: [
@@ -134,7 +132,7 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
                   alignment: Alignment.center,
                   child: Stack(
                   children: [
-                    Align(
+                    const Align(
                       alignment: Alignment.center,
                       child: Text("Create new\nNeighbourhood", style: Styles.titleStyle, textAlign: TextAlign.center),
                     ),
@@ -149,7 +147,7 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
                   ],
                 ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                   child: Container(
@@ -166,7 +164,7 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
                         _buildPrompt("State :", stateController),
                         _buildPrompt("PIN Code :", zipController),
                         _buildPrompt("Description :", descriptionController, maxLines: 4),
-                        SizedBox(height: 40),
+                        const SizedBox(height: 40),
                         SizedBox(
                           width: deviceWidth-76,
                           child: ElevatedButton(
@@ -176,15 +174,15 @@ class CreateNeighbourhood extends StatelessWidget with CustomStyle {
                             style: TextButton.styleFrom(
                               textStyle: buttonTextStyle,
                               backgroundColor: Styles.lightPurple,
-                              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 18),
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            child: Text("Create", style: TextStyle(color: Colors.white)),
+                            child: const Text("Create", style: TextStyle(color: Colors.white)),
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -247,7 +245,7 @@ void showConfirmationDialog(BuildContext context) {
                   onPressed: () {
                     addNhood();    
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Neighbourhood added successfully!")),
+                      const SnackBar(content: Text("Neighbourhood added successfully!")),
                           );
                     Navigator.pushAndRemoveUntil(
                           context,

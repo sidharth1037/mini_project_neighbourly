@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore package
-import 'package:mini_ui/menu/menu.dart';
 import 'package:mini_ui/menu/priority/volremove.dart';
-import 'package:mini_ui/navbar.dart';
-import 'package:mini_ui/organization/volunteerlist.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../styles/styles.dart';
 import 'searchvol.dart';
 
@@ -11,10 +9,10 @@ class PriorityPage extends StatefulWidget {
   const PriorityPage({super.key});
 
   @override
-  _PriorityPageState createState() => _PriorityPageState();
+  PriorityPageState createState() => PriorityPageState();
 }
 
-class _PriorityPageState extends State<PriorityPage> {
+class PriorityPageState extends State<PriorityPage> {
   late Future<List<Map<String, String>>> _volunteersFuture;
 
   @override
@@ -31,23 +29,29 @@ class _PriorityPageState extends State<PriorityPage> {
 
   Future<List<Map<String, String>>> fetchVolunteers() async {
     List<Map<String, String>> volunteers = [];
+    List<String> volunteerIds = [];
     try {
       // Fetch homebound collection
-      QuerySnapshot homeboundSnapshot =
-          await FirebaseFirestore.instance.collection('homebound').get();
+      final prefs = await SharedPreferences.getInstance();
+      String userId = prefs.getString('userId')??'';
+      final homeboundId = prefs.getString('homeboundId')??"";
+      if(homeboundId != "") {
+        userId = homeboundId;
+      } // assuming 'userId' is the homeboundId
 
-      // Extract volunteer IDs
-      List<String> volunteerIds = homeboundSnapshot.docs
-          .where((doc) =>
-              doc.data() != null &&
-              (doc.data() as Map<String, dynamic>)
-                  .containsKey('volunteerId')) // Check if field exists
-          .expand((doc) {
-            var ids = (doc['volunteerId'] as List<dynamic>?) ?? [];
-            return ids.map((id) => id.toString());
-          })
-          .toSet() // Remove duplicates
-          .toList();
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('homebound')
+          .doc(userId)
+          .get();
+
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        final ids = data?['volunteerId'] as List<dynamic>?;
+
+        if (ids != null) {
+          volunteerIds = ids.map((id) => id.toString()).toList();
+        }
+      }
 
       // Fetch volunteer details for each ID
       for (String id in volunteerIds) {
@@ -71,7 +75,7 @@ class _PriorityPageState extends State<PriorityPage> {
         }
       }
     } catch (e) {
-      print("Error fetching volunteers: $e");
+      debugPrint("Error fetching volunteers: $e");
     }
     return volunteers;
   }
@@ -89,7 +93,7 @@ class _PriorityPageState extends State<PriorityPage> {
                 height: MediaQuery.of(context).size.height * 0.33,
                 child: Stack(
                   children: [
-                    Align(
+                    const Align(
                       alignment: Alignment.center,
                       child: Text(
                         "Volunteer\nPriority List",
@@ -119,11 +123,13 @@ class _PriorityPageState extends State<PriorityPage> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       // Center the CircularProgressIndicator with adjusted position
-                      return Column(
+                      return const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Spacer(flex: 2), // Push the indicator slightly up
-                          const CircularProgressIndicator(),
+                          CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
                           Spacer(flex: 3), // Balance the remaining space
                         ],
                       );
@@ -132,9 +138,8 @@ class _PriorityPageState extends State<PriorityPage> {
                         child: Text("Error loading data"),
                       );
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text("No volunteers found"),
-                      );
+                      return const Text("No volunteers found", 
+                          style: TextStyle(color: Colors.white, fontSize: 18));
                     }
 
                     List<Map<String, String>> requests = snapshot.data!;
@@ -204,15 +209,15 @@ class _PriorityPageState extends State<PriorityPage> {
                           color: Color.fromARGB(255, 209, 209, 209), width: 3),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min, // Keep button size compact
                     mainAxisAlignment:
                         MainAxisAlignment.center, // Center text and icon
                     children: [
-                      const Icon(Icons.add,
+                      Icon(Icons.add,
                           color: Colors.white, size: 40), // Plus icon
-                      const SizedBox(width: 8), // Space between icon and text
-                      const Text("Add Volunteer",
+                      SizedBox(width: 8), // Space between icon and text
+                      Text("Add Volunteer",
                           style: Styles.buttonTextStyle),
                     ],
                   ),

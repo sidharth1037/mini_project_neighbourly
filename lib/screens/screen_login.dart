@@ -86,14 +86,12 @@ class LoginScreenState extends State<LogInScreen> {
             .collection('guardian_requests')
             .where('homeboundId', isEqualTo: user.uid)
             .get();
-        print(homeboundQuery.docs);
 
         // Query 2: where guardianId == userId
         final guardianQuery = await FirebaseFirestore.instance
             .collection('guardian_requests')
             .where('guardianId', isEqualTo: user.uid)
             .get();
-        print(guardianQuery.docs);
 
         // Combine results (avoiding duplicates by doc.id)
         final allDocs = {
@@ -102,7 +100,6 @@ class LoginScreenState extends State<LogInScreen> {
         }.values.toList();
 
         final guardianData = allDocs.isNotEmpty ? allDocs[0].data() : null;
-        print(guardianData);
 
         if (userDoc.exists) {
           final userData = userDoc.data();
@@ -112,10 +109,10 @@ class LoginScreenState extends State<LogInScreen> {
           await prefs.setString('userId', user.uid);
           await prefs.setString('userType', userType);
           await prefs.setString('userName', userData?['name'] ?? '');
+          await prefs.setString('userGender', userData?['gender'] ?? '');
           await prefs.setString('userEmail', userData?['email'] ?? '');
           await prefs.setString('userAddress', userData?['address'] ?? '');
-          await prefs.setString(
-              'neighbourhoodId', userData?['neighbourhoodId'] ?? '');
+          await prefs.setString('neighbourhoodId', userData?['neighbourhoodId'] ?? '');
           await prefs.setString('orgName', userData?['orgName'] ?? 'none');
           await prefs.setString('orgId', userData?['orgId'] ?? '');
           await prefs.setStringList(
@@ -126,6 +123,23 @@ class LoginScreenState extends State<LogInScreen> {
           await prefs.setString('homeboundId', guardianData?['homeboundId'] ?? '');
           await prefs.setString('guardianId', guardianData?['guardianId'] ?? '');
           await prefs.setString('guardianName', guardianData?['guardianName'] ?? '');
+
+          if(userType == "guardians" && guardianData != null) {
+            String homeboundId = guardianData['homeboundId'] ?? '';
+
+            if(homeboundId != ""){
+            DocumentSnapshot homeboundDoc = await FirebaseFirestore.instance
+              .collection('homebound')
+              .doc(guardianData['homeboundId'])
+              .get();
+
+            await prefs.setString('neighbourhoodId', homeboundDoc['neighbourhoodId'] ?? '');
+            final rawAmount = homeboundDoc['amount']?.toString() ?? '0';
+            final amount = int.tryParse(rawAmount.split('.').first) ?? 0;
+            await prefs.setInt('amount', amount);
+            }
+          }
+
           setState(() => _isLoading = false);
           _goToHome();
           return 'success';
@@ -139,7 +153,6 @@ class LoginScreenState extends State<LogInScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      print('$e');
       return 'An error occurred';
     }
   }

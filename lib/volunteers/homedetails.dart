@@ -17,26 +17,21 @@ class _HomeBoundDetailsPageState extends State<HomeBoundDetailsPage> {
   String neighbourhoodName="";
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     details(); // Fetch volunteer details when the page is initialized
 
   }
    Future<void> details() async {
     try {
-      print(widget.volunteerId);
       DocumentSnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
           .collection('homebound')
           .doc(widget.volunteerId)
           .get();
       volunteerDetails = querySnapshot.data() ?? {};
-      print(volunteerDetails);
       DocumentSnapshot<Map<String, dynamic>> querySnapshot2 = await FirebaseFirestore.instance
       .collection('neighbourhood')
       .doc(volunteerDetails["neighbourhoodId"])
       .get();
-  print(volunteerDetails["neighbourhoodId"]);
-  print(querySnapshot2.data()?["name"]);
   neighbourhoodName = querySnapshot2.data()?["name"]??"";
        setState(() {
       isLoading = false; // Update loading state
@@ -109,6 +104,10 @@ class _HomeBoundDetailsPageState extends State<HomeBoundDetailsPage> {
 
                   const SizedBox(height: 10),
 
+                  buildInfoContainer("Phone:", value: (volunteerDetails["phone"]?.toString()??"")),
+
+                  const SizedBox(height: 10),
+
                   // Rating
                   buildInfoContainer("Address:", value: (volunteerDetails["address"])),
 
@@ -118,39 +117,6 @@ class _HomeBoundDetailsPageState extends State<HomeBoundDetailsPage> {
                   buildInfoContainer("Neighbourhood:", value: neighbourhoodName),
 
                   const SizedBox(height: 14),
-
-                  // Cancel Request Button
-                  // SizedBox(
-                  //   width: double.infinity,
-                  //   height: 56,
-                  //   child: TextButton(
-                  //     onPressed: () {
-                  //       showConfirmationDialog(context);
-                  //     },
-                  //     style: ElevatedButton.styleFrom(
-                  //       backgroundColor: Colors.red[500],
-                  //       shape: RoundedRectangleBorder(
-                  //         borderRadius: BorderRadius.circular(20),
-                  //         side: const BorderSide(color: Styles.offWhite, width: 2),
-                  //       ),
-                  //     ),
-                  //     child: const Row(
-                  //       mainAxisSize: MainAxisSize.min,
-                  //       children: [
-                  //         Icon(Icons.cancel, color: Colors.white, size: 26),
-                  //         SizedBox(width: 8),
-                  //         Text(
-                  //           "Remove Volunteer",
-                  //           style: TextStyle(
-                  //             color: Colors.white,
-                  //             fontSize: 18,
-                  //             fontWeight: FontWeight.bold,
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
                 ],
               ),
             ),

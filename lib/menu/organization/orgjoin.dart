@@ -25,7 +25,7 @@ class JoinOrganization extends StatelessWidget with CustomStyle {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('organization')
           .where('orgName', isGreaterThanOrEqualTo: query)
-          .where('orgName', isLessThanOrEqualTo: query + '\uf8ff')
+          .where('orgName', isLessThanOrEqualTo: '$query\uf8ff')
           .get();
       filteredItems.value = querySnapshot.docs.map((doc) 
                       => 
@@ -38,9 +38,7 @@ class JoinOrganization extends StatelessWidget with CustomStyle {
                       // But using doc.data() as Map<String, dynamic> is safer.
                 doc.data() as Map<String,dynamic>
                       
-                      ).toList();
-      print(filteredItems.value);
-      
+                      ).toList();      
     } catch (e) {
       debugPrint("Error fetching Firestore data: $e");
     } finally {
@@ -57,7 +55,7 @@ class JoinOrganization extends StatelessWidget with CustomStyle {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: DecoratedBox(
-          decoration: BoxDecoration(color: Styles.darkPurple),
+          decoration: const BoxDecoration(color: Styles.darkPurple),
           child: Column(
             children: [
               Container(

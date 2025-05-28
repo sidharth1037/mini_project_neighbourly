@@ -123,7 +123,7 @@ class ChangeRoleCardSectionState extends State<ChangeRoleCardSection> {
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  side: BorderSide( color: Color.fromARGB(255, 241, 241, 241), width: 2.0)
+                  side: const BorderSide( color: Color.fromARGB(255, 241, 241, 241), width: 2.0)
                   
                 ),
               ),
@@ -175,7 +175,7 @@ class RoleCard extends StatelessWidget {
         child: Card(
           shape: isSelected
               ? RoundedRectangleBorder(
-                  side: const BorderSide(color: const Color.fromARGB(255, 241, 241, 241), width: 3.0),
+                  side: const BorderSide(color: Color.fromARGB(255, 241, 241, 241), width: 3.0),
                   borderRadius: BorderRadius.circular(20.0),
                 )
               : RoundedRectangleBorder(

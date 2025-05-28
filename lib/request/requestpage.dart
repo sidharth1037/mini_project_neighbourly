@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../styles/styles.dart';
 import 'reqdetails.dart';
 import 'newreq.dart';
@@ -49,10 +50,22 @@ class RequestsPageState extends State<RequestsPage> {
     }
 
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+      final prefs = await SharedPreferences.getInstance();
+      final homeboundId = prefs.getString("homeboundId")??"";
+      final userType = prefs.getString("userType");
+      QuerySnapshot querySnapshot;
+
+      if (homeboundId != "" && userType == "guardians") {
+        querySnapshot = await FirebaseFirestore.instance
+          .collection('current_requests')
+          .where('homeboundId', isEqualTo: homeboundId)
+          .get();
+      } else {
+        querySnapshot = await FirebaseFirestore.instance
           .collection('current_requests')
           .where('homeboundId', isEqualTo: user.uid)
           .get();
+      }
 
       if (mounted) {
         setState(() {

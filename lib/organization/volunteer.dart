@@ -18,26 +18,21 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
   String neighbourhoodName="";
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     details(); // Fetch volunteer details when the page is initialized
 
   }
    Future<void> details() async {
     try {
-      print(widget.volunteerId);
       DocumentSnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
           .collection('volunteers')
           .doc(widget.volunteerId)
           .get();
       volunteerDetails = querySnapshot.data() ?? {};
-      print(volunteerDetails);
       DocumentSnapshot<Map<String, dynamic>> querySnapshot2 = await FirebaseFirestore.instance
       .collection('neighbourhood')
       .doc(volunteerDetails["neighbourhoodId"])
       .get();
-  print(volunteerDetails["neighbourhoodId"]);
-  print(querySnapshot2.data()?["name"]);
   neighbourhoodName = querySnapshot2.data()?["name"]??"";
        setState(() {
       isLoading = false; // Update loading state
@@ -140,6 +135,10 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
                   const SizedBox(height: 10),
 
+                  buildInfoContainer("Phone:", value: (volunteerDetails["phone"]?.toString()??"N/A")),
+
+                  const SizedBox(height: 10),
+
                   // Rating
                   buildInfoContainer("Rating:", value: (volunteerDetails["rating"]?.toString()??"0"), isRating: true),
 
@@ -151,7 +150,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
                   const SizedBox(height: 10),
 
                   // Requests Completed
-                  buildInfoContainer("Requests Completed:", value: (volunteerDetails["requestsCompleted"]?.toString()??"0")),
+                  buildInfoContainer("Requests Completed:", value: (volunteerDetails["ratingcount"]?.toString()??"0")),
 
                   const SizedBox(height: 10),
 
@@ -166,7 +165,6 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
                     height: 56,
                     child: TextButton(
                       onPressed: () {
-                        print(volunteerDetails["uid"]);
                         Navigator.push(
                           context,
                           MaterialPageRoute(

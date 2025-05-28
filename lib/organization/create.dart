@@ -60,12 +60,13 @@ class CreateOrganizationState extends State<CreateOrganization> with CustomStyle
 
         await prefs.setString('orgName', orgName);
 
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-          (route) => false,
-        );
-
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
+          );
+        }
       } catch (e) {
         debugPrint("Error: $e");
       }
@@ -115,7 +116,7 @@ class CreateOrganizationState extends State<CreateOrganization> with CustomStyle
             ),
             ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
       ],
     );
   }
@@ -153,7 +154,7 @@ class CreateOrganizationState extends State<CreateOrganization> with CustomStyle
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
       ],
     );
   }
@@ -209,7 +210,7 @@ class CreateOrganizationState extends State<CreateOrganization> with CustomStyle
                           _buildPrompt("Organization ID/Number:",
                               organizationIdController),
                           _buildPrompt("Address:", addressController),
-                          SizedBox(height: (deviceHeight * 0.14)),
+                          const Spacer(),
                           SizedBox(
                             width: deviceWidth - 76,
                             child: ElevatedButton(
@@ -246,6 +247,7 @@ class CreateOrganizationState extends State<CreateOrganization> with CustomStyle
                                   : const Text("Continue", style: TextStyle(color: Colors.white)),
                             ),
                           ),
+                          const SizedBox(height: 15),
                         ],
                       ),
                     ),

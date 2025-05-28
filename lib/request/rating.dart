@@ -67,13 +67,17 @@ class RateVolunteerPageState extends State<RateVolunteerPage> {
       "ratingcount": ratingCount + 1,
     }, SetOptions(merge: true)); // Merge to keep existing data
 
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Failed to submit rating. Please try again.'),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to submit rating. Please try again.'),
+        ),
+      );
+    }
   } finally {
     setState(() {
       _isSubmitting = false;

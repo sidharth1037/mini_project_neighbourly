@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mini_ui/menu/priority/prioritylist.dart';
-import '../../styles/styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../styles/styles.dart';
 
 class VolDetails extends StatelessWidget {
   final Map<String, dynamic> requestDetails;
@@ -61,7 +60,7 @@ class VolDetails extends StatelessWidget {
                             color: Styles.white,
                           ),
                           child:
-                              Icon(Icons.person, size: 40, color: Colors.grey),
+                              const Icon(Icons.person, size: 40, color: Colors.grey),
                         ), // Profile Icon
                         const SizedBox(
                             width: 10), // Spacing between icon and name
@@ -197,10 +196,10 @@ void showConfirmationDialog(BuildContext context, String volunteerId) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
+      bool isLoading = false;
+
       return StatefulBuilder(
         builder: (context, setStateDialog) {
-          bool isLoading = false; // Local loading state
-
           return AlertDialog(
             backgroundColor: Styles.mildPurple,
             shape: RoundedRectangleBorder(
@@ -229,7 +228,7 @@ void showConfirmationDialog(BuildContext context, String volunteerId) {
                     style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
             actions: isLoading
-                ? [] // Disable actions while loading
+                ? [] // Disable buttons during loading
                 : [
                     Column(
                       children: [
@@ -259,8 +258,10 @@ void showConfirmationDialog(BuildContext context, String volunteerId) {
                           width: double.infinity,
                           child: TextButton(
                             onPressed: () async {
-                              setStateDialog(
-                                  () => isLoading = true); // Show loader
+                              setStateDialog(() {
+                                isLoading = true;
+                              });
+
                               await addVolunteers(volunteerId);
 
                               if (context.mounted) {
@@ -270,7 +271,8 @@ void showConfirmationDialog(BuildContext context, String volunteerId) {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => PriorityPage()),
+                                    builder: (context) => const PriorityPage(),
+                                  ),
                                 );
                               }
                             },
@@ -301,28 +303,27 @@ void showConfirmationDialog(BuildContext context, String volunteerId) {
   );
 }
 
+
 // Function to add neighbourhood ID to the current user's collection
 Future<void> addVolunteers(String volunteerId) async {
   try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      print("Error: User not logged in");
-      return;
+    final prefs = await SharedPreferences.getInstance();
+    String userId = prefs.getString('userId')??'';
+    final homeboundId = prefs.getString('homeboundId')??"";
+    if(homeboundId != "") {
+      userId = homeboundId;
     }
 
     DocumentReference userDocRef =
-        FirebaseFirestore.instance.collection("homebound").doc(user.uid);
+        FirebaseFirestore.instance.collection("homebound").doc(userId);
 
     // Use Firestore's arrayUnion to add the volunteerId to the list
     await userDocRef.set({
       'volunteerId': FieldValue.arrayUnion([volunteerId])
     }, SetOptions(merge: true));
-
-    print("Volunteer ID added successfully");
   } catch (e) {
-    print("Error adding Volunteer: $e");
     // Retry logic
-    Future.delayed(Duration(seconds: 5), () => addVolunteers(volunteerId));
+    Future.delayed(const Duration(seconds: 5), () => addVolunteers(volunteerId));
   }
 }
 

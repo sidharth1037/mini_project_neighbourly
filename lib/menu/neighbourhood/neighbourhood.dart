@@ -23,8 +23,6 @@ Future<Map<String, dynamic>> getNeighbourhoodDetails(String nhId) async {
   String joindet = prefs.getString('neighbourhoodId') ?? '' ;
   // joined = await check()==''?false:true;
   // return joindet;
-  print(joindet);
-
   return joindet;
 }
 
@@ -37,10 +35,10 @@ class Neighbourhood extends StatefulWidget with CustomStyle {
   Neighbourhood({super.key});
 
   @override
-  _NeighbourhoodState createState() => _NeighbourhoodState();
+  NeighbourhoodState createState() => NeighbourhoodState();
 }
 
-class _NeighbourhoodState extends State<Neighbourhood> {
+class NeighbourhoodState extends State<Neighbourhood> {
   bool joined = false;
   bool _isLoading = true;
   String nhId = '';
@@ -61,7 +59,6 @@ class _NeighbourhoodState extends State<Neighbourhood> {
     String joindet = await check();
     if(joindet.isNotEmpty){
       Map<String,dynamic> nhdetails1 = await getNeighbourhoodDetails(joindet);
-      print(nhdetails1);
       if(nhdetails1.isNotEmpty){
         setState(() {
           nhId = joindet;
@@ -95,6 +92,11 @@ class _NeighbourhoodState extends State<Neighbourhood> {
     final user = await SharedPreferences.getInstance();
     String userType=user.getString('userType')??'';
     String userId=user.getString('userId')??'';
+    final homeboundId = user.getString("homeboundId")??"";
+    if (homeboundId != "") {
+      userId = homeboundId;
+      userType = "homebound";
+    }
     user.remove("neighbourhoodId");
     await FirebaseFirestore.instance
         .collection(userType) // Change to your collection name
@@ -108,14 +110,12 @@ class _NeighbourhoodState extends State<Neighbourhood> {
         .update({
           userType: FieldValue.increment(-1),// Replace 'fieldName' with the actual field name
         });
-
-    print('Field removed successfully');
     setState(() {
       joined = false;
       _isLoading = false;
     });
   } catch (e) {
-    print('Error removing field: $e');
+    debugPrint('Error removing field: $e');
   }
 }
 
@@ -137,7 +137,7 @@ class _NeighbourhoodState extends State<Neighbourhood> {
 
       return Scaffold(
         body: DecoratedBox(
-          decoration: BoxDecoration(color: Styles.darkPurple),
+          decoration: const BoxDecoration(color: Styles.darkPurple),
           child: Column(
             children: [
               Container(
@@ -145,7 +145,7 @@ class _NeighbourhoodState extends State<Neighbourhood> {
                 alignment: Alignment.center,
                 child: Stack(
                   children: [
-                    Align(
+                    const Align(
                       alignment: Alignment.center,
                       child: Text("Your Neighbourhood", style: Styles.titleStyle, textAlign: TextAlign.center),
                     ),
@@ -252,7 +252,7 @@ class RequestBox extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   child: 
                     Text(title, style: Styles.bodyStyle.copyWith(
                       fontSize: 25,

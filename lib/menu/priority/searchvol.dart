@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mini_ui/menu/priority/prioritylist.dart';
 import 'package:mini_ui/menu/priority/voldetails.dart';
 import 'package:mini_ui/styles/styles.dart';
 
@@ -28,7 +27,7 @@ class SearchVolunteerPage extends StatelessWidget with CustomStyle {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('volunteers')
           .where('name', isGreaterThanOrEqualTo: query)
-          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+          .where('name', isLessThanOrEqualTo: '$query\uf8ff')
           .get();
       filteredData.value = querySnapshot.docs.map((doc) {
                         return{ 
@@ -36,7 +35,6 @@ class SearchVolunteerPage extends StatelessWidget with CustomStyle {
                       ...doc.data() as Map<String,dynamic>};}
                       
                       ).toList();
-      print(filteredData.value);
     } catch (e) {
       debugPrint("Error fetching Firestore data: $e");
     } finally {
@@ -62,7 +60,7 @@ class SearchVolunteerPage extends StatelessWidget with CustomStyle {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: DecoratedBox(
-          decoration: BoxDecoration(color: Styles.darkPurple),
+          decoration: const BoxDecoration(color: Styles.darkPurple),
           child: Column(
             children: [
               Container(
@@ -70,7 +68,7 @@ class SearchVolunteerPage extends StatelessWidget with CustomStyle {
                 alignment: Alignment.center,
                 child: Stack(
                   children: [
-                    Align(
+                    const Align(
                       alignment: Alignment.center,
                       child: Text("Add new\nVolunteer",
                           style: Styles.titleStyle,
