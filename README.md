@@ -1,6 +1,4 @@
-# mini_ui
-
-A new Flutter project.
+# Neighbourly
 
 ## Getting Started
 
