@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 // final config = Config();
-String apiKey = 'AIzaSyCGeJBG4e82liskoLF4cqY-vDXz1wJUexQ';  //config.apiKey;
+String apiKey = '';  //config.apiKey;
 
 const String geminiEndpoint = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent';
 
